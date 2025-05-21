@@ -135,7 +135,7 @@ Please See [EVAL](EVAL.md) for more details.
 @article{deng2025bagel,
   title   = {Emerging Properties in Unified Multimodal Pretraining},
   author  = {Deng, Chaorui and Zhu, Deyao and Li, Kunchang and Gou, Chenhui and Li, Feng and Wang, Zeyu and Zhong, Shu and Yu, Weihao and Nie, Xiaonan and Song, Ziang and Shi, Guang and Fan, Haoqi},
-  journal = {arXiv preprint arXiv:TODO},
+  journal = {arXiv preprint arXiv:2505.14683},
   year    = {2025}
 }
 ```
