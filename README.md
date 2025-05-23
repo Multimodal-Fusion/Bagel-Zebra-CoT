@@ -41,7 +41,7 @@
   </a>
 </p>
 
-# 🥯 BAGEL • Unified Model for Multimodal Understanding and Generation
+# Unified Model for Multimodal Understanding and Generation
 > We present **BAGEL**, an open‑source multimodal foundation model with 7B active parameters (14B total) trained on large‑scale interleaved multimodal data. BAGEL outperforms the current top‑tier open‑source VLMs like Qwen2.5-VL and InternVL-2.5 on standard multimodal understanding leaderboards, and delivers text‑to‑image quality that is competitive with strong specialist generators such as SD3.
 Moreover, BAGEL demonstrates superior qualitative results in classical image‑editing scenarios than the leading open-source models. More importantly, it extends to free-form visual manipulation, multiview synthesis, and world navigation, capabilities that constitute "world-modeling" tasks beyond the scope of previous image-editing models.
 The figure below showcases BAGEL's qualitative performance.
@@ -64,6 +64,20 @@ As we scale up BAGEL’s pretraining with more multimodal tokens, we observe con
 
 ## 📮 Notice
 **Call for Bad Cases:** If you have encountered any cases where the model performs poorly, we would greatly appreciate it if you could share them in the [issue#11](https://github.com/ByteDance-Seed/Bagel/issues/11) or [Discord](https://discord.gg/Z836xxzy).
+
+**About Inference Hyperparameters:**
+- **`cfg_text_scale`:** Controls how strongly the model follows the text prompt. `1.0` disables text guidance. Typical range: `4.0–8.0`.
+- **`cfg_image_scale`:** Controls how much the model preserves input image details. `1.0` disables image guidance. Typical range: `1.0–2.0`.
+- **`cfg_interval`:** Fraction of denoising steps where CFG is applied. Later steps can skip CFG to reduce computation. Typical: `[0.4, 1.0]`.
+- **`timestep_shift`:** Shifts the distribution of denoising steps. Higher values allocate more steps at the start (affects layout); lower values allocate more at the end (improves details).
+- **`num_timesteps`:** Total denoising steps. Typical: `50`.
+- **`cfg_renorm_min`:** Minimum value for CFG-Renorm. `1.0` disables renorm. Typical: `0`.
+- **`cfg_renorm_type`:** CFG-Renorm method:  
+  - `global`: Normalize over all tokens and channels (default for T2I).
+  - `local`: Normalize per channel.
+  - `text_channel`: Like `local`, but only applies to text condition (good for editing, may cause blur).
+- **If edited images appear blurry, try `global` CFG-Renorm, decrease `cfg_renorm_min` or decrease `cfg_scale`.**
+
 
 ## 🔥 Quick Start
 

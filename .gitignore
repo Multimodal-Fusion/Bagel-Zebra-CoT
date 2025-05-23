@@ -3,7 +3,6 @@ __pycache__
 .vscode
 notebooks
 results
-*.ipynb 
 *.ipynb_checkpoints
 eval_results
 tests

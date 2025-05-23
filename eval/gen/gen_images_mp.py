@@ -122,20 +122,16 @@ if __name__ == "__main__":
     if rank == 0:
         print(f"Output images are saved in {output_dir}")
 
-    llm_path = args.llm_path
-    vit_path = args.vit_path
-    vae_path = args.vae_path
-
-    llm_config = Qwen2Config.from_pretrained(llm_path)
+        llm_config = Qwen2Config.from_json_file(os.path.join(args.model_path, "llm_config.json"))
     llm_config.qk_norm = True
     llm_config.tie_word_embeddings = False
     llm_config.layer_module = "Qwen2MoTDecoderLayer"
 
-    vit_config = SiglipVisionConfig.from_pretrained(vit_path)
+    vit_config = SiglipVisionConfig.from_json_file(os.path.join(args.model_path, "vit_config.json"))
     vit_config.rope = False
     vit_config.num_hidden_layers = vit_config.num_hidden_layers - 1
 
-    vae_model, vae_config = load_ae(local_path=vae_path)
+    vae_model, vae_config = load_ae(local_path=os.path.join(args.model_path, "ae.safetensors"))
 
     config = BagelConfig(
         visual_gen=True,
@@ -154,7 +150,7 @@ if __name__ == "__main__":
         model          = Bagel(language_model, vit_model, config)
         model.vit_model.vision_model.embeddings.convert_conv2d_to_linear(vit_config, meta=True)
 
-    tokenizer = Qwen2Tokenizer.from_pretrained(llm_path)
+    tokenizer = Qwen2Tokenizer.from_pretrained(args.model_path)
     tokenizer, new_token_ids, _ = add_special_tokens(tokenizer)
 
     ema_state_dict_path = os.path.join(args.resume_from, f"ema.safetensors") # may beed to change
