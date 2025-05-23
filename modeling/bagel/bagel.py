@@ -949,3 +949,78 @@ class Bagel(PreTrainedModel):
 
         output_device = generated_sequence[0].device
         return torch.stack([i.to(output_device) for i in generated_sequence], dim=0)
+
+    # for evaluation
+    @torch.no_grad()
+    def chat(
+        self,
+        tokenizer,
+        new_token_ids,
+        image_transform,
+        images,
+        prompt,
+        max_length: int,
+        do_sample: bool = False,
+        temperature: float = 1.0,
+    ):
+        device = next(self.parameters()).device
+
+        if isinstance(new_token_ids, dict):
+            for k, v in new_token_ids.items():
+                if torch.is_tensor(v):
+                    new_token_ids[k] = v.to(device)
+        elif torch.is_tensor(new_token_ids):
+            new_token_ids = new_token_ids.to(device)
+
+        # prefill
+        past_key_values = NaiveCache(self.config.llm_config.num_hidden_layers)
+        newlens = [0]
+        new_rope = [0]
+
+        # add images
+        for image in images:
+            generation_input, newlens, new_rope = self.prepare_vit_images(
+                curr_kvlens=newlens,
+                curr_rope=new_rope, 
+                images=[image], 
+                transforms=image_transform,
+                new_token_ids=new_token_ids,
+            )
+            for k, v in generation_input.items():
+                if torch.is_tensor(v):
+                    generation_input[k] = v.to(device)
+            with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
+                past_key_values = self.forward_cache_update_vit(past_key_values, **generation_input)
+
+        # add text
+        generation_input, newlens, new_rope = self.prepare_prompts(
+            curr_kvlens=newlens,
+            curr_rope=new_rope, 
+            prompts=[prompt],
+            tokenizer=tokenizer, 
+            new_token_ids=new_token_ids,
+        )
+        for k, v in generation_input.items():
+            if torch.is_tensor(v):
+                generation_input[k] = v.to(device)
+        with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
+            past_key_values = self.forward_cache_update_text(past_key_values, **generation_input)
+
+        # decode
+        generation_input = self.prepare_start_tokens(newlens, new_rope, new_token_ids)
+        for k, v in generation_input.items():
+            if torch.is_tensor(v):
+                generation_input[k] = v.to(device)
+        with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
+            unpacked_latent = self.generate_text(
+                past_key_values=past_key_values,
+                max_length=max_length,
+                do_sample=do_sample,
+                temperature=temperature,
+                end_token_id=new_token_ids['eos_token_id'],
+                **generation_input,
+            )
+        output = tokenizer.decode(unpacked_latent[:,0])
+        output = output.split('<|im_end|>')[0].split('<|im_start|>')[1]
+
+        return output

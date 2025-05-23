@@ -28,7 +28,6 @@ def post_processing(response):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', type=str, default='')
     parser.add_argument('--root', type=str, default='eval/vlm/eval/mme/Your_Results')
     parser.add_argument('--out-dir', type=str, default='results')
     parser.add_argument('--model-path', type=str, default='hf/BAGEL-7B-MoT/')

@@ -7,13 +7,11 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-PREFIX_DIR=$1
-MODEL_PATH=$2
-LOG_PATH=$3
+LOG_PATH=$1
 if [ ! -d "$LOG_PATH" ]; then
     mkdir -p "$LOG_PATH"
 fi
-shift 3
+shift 1
 ARGS=("$@")
 export MASTER_PORT=10042
 
@@ -23,7 +21,6 @@ IFS=' ' read -r -a DATASETS <<< "$DATASETS_STR"
 
 for DATASET in "${DATASETS[@]}"; do
     bash eval/vlm/evaluate.sh \
-        "$FULL_MODEL_PATH" \
         "$DATASET" \
         --out-dir "$LOG_PATH/$DATASET" \
         "${ARGS[@]}"

@@ -9,7 +9,7 @@ from PIL import Image
 
 from .data_utils import pil_img2rgb
 from .distributed_iterable_dataset import DistributedIterableDataset
-from .parquet_utils import get_parquet_data_paths, init_arrow_hdfs_fs
+from .parquet_utils import get_parquet_data_paths, init_arrow_pf_fs
 
 Image.MAX_IMAGE_PIXELS = 20_000_000
 
@@ -53,7 +53,7 @@ class T2IIterableDataset(DistributedIterableDataset):
         while True:
             data_paths_per_worker_ = data_paths_per_worker[parquet_start_id:]
             for parquet_idx, parquet_file_path in enumerate(data_paths_per_worker_, start=parquet_start_id):
-                fs = init_arrow_hdfs_fs()
+                fs = init_arrow_pf_fs(parquet_file_path)
                 with fs.open_input_file(parquet_file_path) as f:
                     fr = pq.ParquetFile(f)
                     row_group_ids = list(range(fr.num_row_groups))

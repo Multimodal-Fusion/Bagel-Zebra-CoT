@@ -482,7 +482,6 @@ def evaluate_chat_model():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', type=str, default='')
     parser.add_argument('--datasets', type=str,
                         default='okvqa_val,textvqa_val,vizwiz_val,ai2diagram_test,gqa_testdev_llava')
     parser.add_argument('--batch-size', type=int, default=1)

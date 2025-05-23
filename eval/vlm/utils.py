@@ -11,7 +11,6 @@
 
 import os
 import yaml
-from accelerate import init_empty_weights
 
 from data.data_utils import add_special_tokens, pil_img2rgb
 from modeling.bagel import (
@@ -46,22 +45,15 @@ def load_model_and_tokenizer(args):
         vit_max_num_patch_per_side=70,
         connector_act='gelu_pytorch_tanh',
     )
-
-    with init_empty_weights():
-        language_model = Qwen2ForCausalLM(llm_config)
-        vit_model      = SiglipVisionModel(vit_config)
-        model          = Bagel(language_model, vit_model, config)
-        model.vit_model.vision_model.embeddings.convert_conv2d_to_linear(vit_config, meta=True)
+    language_model = Qwen2ForCausalLM(llm_config)
+    vit_model = SiglipVisionModel(vit_config)
+    model = Bagel(language_model, vit_model, config)
+    model.vit_model.vision_model.embeddings.convert_conv2d_to_linear(vit_config)
 
     tokenizer = Qwen2Tokenizer.from_pretrained(args.model_path)
-    tokenizer, new_token_ids, num_new_tokens = add_special_tokens(tokenizer)
-    if num_new_tokens > 0:
-        model.language_model.resize_token_embeddings(len(tokenizer))
-        model.config.llm_config.vocab_size = len(tokenizer)
-        model.language_model.config.vocab_size = len(tokenizer)
+    tokenizer, new_token_ids, _ = add_special_tokens(tokenizer)
 
     model_state_dict_path = os.path.join(args.model_path, "ema.safetensors")
-
     model_state_dict = load_file(model_state_dict_path, device="cpu")
     msg = model.load_state_dict(model_state_dict, strict=False)
     print(msg)

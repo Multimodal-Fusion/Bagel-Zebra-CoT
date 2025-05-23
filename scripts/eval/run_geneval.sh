@@ -4,7 +4,6 @@
 set -x
 
 GPUS=8
-OUTPUT_DIR=$output_path
 
 # generate images
 torchrun \
@@ -14,7 +13,7 @@ torchrun \
     --master_addr=127.0.0.1 \
     --master_port=12345 \
     ./eval/gen/gen_images_mp.py \
-    --output_dir $OUTPUT_DIR \
+    --output_dir $output_path/images \
     --metadata_file ./eval/gen/geneval/prompts/evaluation_metadata_long.jsonl \
     --batch_size 1 \
     --num_images 4 \
@@ -32,7 +31,7 @@ torchrun \
     --master_addr=127.0.0.1 \
     --master_port=12345 \
     ./eval/gen/geneval/evaluation/evaluate_images_mp.py \
-    $OUTPUT_DIR \
+    $OUTPUT_DIR/images \
     --outfile $OUTPUT_DIR/results.jsonl \
     --model-path ./eval/gen/geneval/model
 

@@ -4,7 +4,7 @@
 import pyarrow.parquet as pq
 
 from ..distributed_iterable_dataset import DistributedIterableDataset
-from ..parquet_utils import get_parquet_data_paths, init_arrow_hdfs_fs
+from ..parquet_utils import get_parquet_data_paths, init_arrow_pf_fs
 
 
 class InterleavedBaseIterableDataset(DistributedIterableDataset):
@@ -182,7 +182,7 @@ class ParquetStandardIterableDataset(DistributedIterableDataset):
             for global_row_group_idx, (parquet_file_path, row_group_id) in enumerate(
                 file_paths_per_worker_, start=global_row_group_start_id
             ):
-                fs = init_arrow_hdfs_fs()
+                fs = init_arrow_pf_fs(parquet_file_path)
                 with fs.open_input_file(parquet_file_path) as f:
                     try:
                         fr = pq.ParquetFile(f)

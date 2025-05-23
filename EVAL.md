@@ -23,7 +23,7 @@ Directly run `scripts/eval/run_eval_vlm.sh` to evaluate different benchmarks. Th
 - For MMBench, please use the official [evaluation server](https://mmbench.opencompass.org.cn/mmbench-submission).
 - For MMVet, please use the official [evaluation server](https://huggingface.co/spaces/whyu/MM-Vet_Evaluator).
 - For MathVista, please set `$openai_api_key` in `scripts/eval/run_eval_vlm.sh` and `your_api_url` in `eval/vlm/eval/mathvista/utilities.py`. The default GPT version is `gpt-4o-2024-11-20`.
-- For MMMU, we use CoT, which improve the accuracy by about 2%. For evaluation of the oprn-ended answer, we use GPT-4o for judgement.
+- For MMMU, we use CoT in the report, which improve the accuracy by about 2%. For evaluation of the oprn-ended answer, we use GPT-4o for judgement.
 
 
 # GenEval

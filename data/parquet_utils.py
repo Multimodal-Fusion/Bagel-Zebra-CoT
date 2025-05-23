@@ -59,7 +59,7 @@ def get_parquet_data_paths(data_dir_list, num_sampled_data_paths, rank=0, world_
 
 # NOTE: cumtomize this function for your cluster
 def get_hdfs_host():
-    return "hdfs://XXX"
+    return "hdfs://xxx"
 
 
 # NOTE: cumtomize this function for your cluster
@@ -72,13 +72,17 @@ def get_hdfs_extra_conf():
     return None
 
 
-def init_arrow_hdfs_fs():
-    return pf.HadoopFileSystem(
-        host=get_hdfs_host(),
-        port=0,
-        buffer_size=get_hdfs_block_size(),
-        extra_conf=get_hdfs_extra_conf(),
-    )
+def init_arrow_pf_fs(parquet_file_path):
+    if parquet_file_path.startswith("hdfs://"):
+        fs = pf.HadoopFileSystem(
+            host=get_hdfs_host(),
+            port=0,
+            buffer_size=get_hdfs_block_size(),
+            extra_conf=get_hdfs_extra_conf(),
+        )
+    else:
+        fs = pf.LocalFileSystem()
+    return fs
 
 
 def hdfs_ls_cmd(dir):

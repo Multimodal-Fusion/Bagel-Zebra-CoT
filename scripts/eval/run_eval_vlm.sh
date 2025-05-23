@@ -7,7 +7,6 @@ set -x
 export OPENAI_API_KEY=$openai_api_key
 
 export GPUS=1
-OUTPUT_DIR=$output_path
 
 DATASETS=("mme" "mmbench-dev-en" "mmvet" "mmmu-val" "mathvista-testmini" "mmvp")
 # DATASETS=("mmmu-val_cot")
@@ -16,7 +15,5 @@ DATASETS_STR="${DATASETS[*]}"
 export DATASETS_STR
 
 bash scripts/eval/eval_vlm.sh \
-     $BASE_RESUME_DIR \
-     $MODEL_NAME/$CKPT \
-     $OUTPUT_DIR \
+    $output_path \
     --model-path $model_path

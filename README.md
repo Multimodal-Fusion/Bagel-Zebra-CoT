@@ -99,12 +99,12 @@ repo_id = "ByteDance-Seed/BAGEL-7B-MoT"
 cache_dir = save_dir + "/cache"
 
 snapshot_download(cache_dir=cache_dir,
-    local_dir=save_dir,
-    repo_id=repo_id,
-    local_dir_use_symlinks=False,
-    resume_download=True,
-    allow_patterns=["*.json", "*.safetensors", "*.bin", "*.py", "*.md", "*.txt"],
-    )
+  local_dir=save_dir,
+  repo_id=repo_id,
+  local_dir_use_symlinks=False,
+  resume_download=True,
+  allow_patterns=["*.json", "*.safetensors", "*.bin", "*.py", "*.md", "*.txt"],
+)
 
 ```
 
@@ -118,8 +118,8 @@ snapshot_download(cache_dir=cache_dir,
 bash scripts/train.sh
 ```
 
-You can replace the variables in the script with your own before running.
-**Training & fine-tuning docs are coming soon**
+You can replace the variables in the script with your own before running. 
+See [TRAIN](TRAIN.md) for more details.
 
 ### Eval
 We provide the scripts for evaluating VLM, T2I and Editing benchmarks. 
