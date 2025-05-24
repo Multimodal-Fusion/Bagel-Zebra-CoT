@@ -78,8 +78,8 @@ As we scale up BAGEL’s pretraining with more multimodal tokens, we observe con
 - **`cfg_renorm_min`:** Minimum value for CFG-Renorm. `1.0` disables renorm. Typical: `0`.
 - **`cfg_renorm_type`:** CFG-Renorm method:  
   - `global`: Normalize over all tokens and channels (default for T2I).
-  - `local`: Normalize per channel.
-  - `text_channel`: Like `local`, but only applies to text condition (good for editing, may cause blur).
+  - `channel`: Normalize across channels for each token.
+  - `text_channel`: Like `channel`, but only applies to text condition (good for editing, may cause blur).
 - **If edited images appear blurry, try `global` CFG-Renorm, decrease `cfg_renorm_min` or decrease `cfg_scale`.**
 
 

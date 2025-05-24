@@ -225,13 +225,11 @@ class InterleaveInferencer:
         num_timesteps=50,
         cfg_renorm_min=0.0,
         cfg_renorm_type="global",
+        image_shapes=(1024, 1024),
     ) -> List[Union[str, Image.Image]]:
 
         output_list = []
-
         gen_context = self.init_gen_context()
-        image_shapes = (1024, 1024)
-
         cfg_text_context = deepcopy(gen_context)
         cfg_img_context = deepcopy(gen_context)
 
@@ -261,7 +259,7 @@ class InterleaveInferencer:
                     raise ValueError(f"Unsupported input type: {type(input_term)}")
 
             if understanding_output:
-                gen_text = self.gen_text(gen_context, do_sample=do_sample, temperature=text_temperature)
+                gen_text = self.gen_text(gen_context, do_sample=do_sample, temperature=text_temperature, max_length=max_think_token_n)
                 output_list.append(gen_text)
 
             else:

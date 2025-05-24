@@ -53,6 +53,7 @@ torchrun \
 ```
 
 - **When fine-tuning BAGEL, please set `max_latent_size=64` to ensure the correct pretrained weights are loaded.**
+- The sum of num_used_data should be larger than NUM_GPUS x NUM_WORKERS.
 - For T2I-only fine-tuning, set `visual_und=False`; for VLM-only, set `visual_gen=False`.
 
  You are encouraged to adjust any of these hyperparameters to fit your GPU budget and the scale of your dataset. If you encounter any issues, please open an issue for assistance. 🎉
