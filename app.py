@@ -20,7 +20,7 @@ from modeling.qwen2 import Qwen2Tokenizer
 
 
 # Model Initialization
-model_path = "/mnt/bn/ic-vlm/personal/likunchang/data/BAGEL-7B-MoT" #Download from https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT
+model_path = "/path/to/BAGEL-7B-MoT/weights" #Download from https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT
 
 llm_config = Qwen2Config.from_json_file(os.path.join(model_path, "llm_config.json"))
 llm_config.qk_norm = True
