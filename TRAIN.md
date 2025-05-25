@@ -46,6 +46,7 @@ torchrun \
   --llm_path $llm_path \
   --vae_path $vae_path \
   --vit_path $vit_path \
+  --layer_module Qwen2MoTDecoderLayer \
   --use_flex True \
   --resume_from $resume_from \
   --results_dir $output_path \

@@ -56,7 +56,7 @@ class ModelArguments:
         metadata={"help": "Share input and output word embeddings (tied embeddings)."}
     )
     layer_module: str = field(
-        default="Qwen2DecoderLayer",
+        default="Qwen2MoTDecoderLayer",
         metadata={"help": "Python class name of the decoder layer to instantiate."}
     )
     vae_path: str = field(
