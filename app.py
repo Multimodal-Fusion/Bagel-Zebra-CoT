@@ -18,9 +18,17 @@ from modeling.bagel import (
 )
 from modeling.qwen2 import Qwen2Tokenizer
 
+import argparse
+
+parser = argparse.ArgumentParser() 
+parser.add_argument("--server_name", type=str, default="127.0.0.1")
+parser.add_argument("--server_port", type=int, default=7860)
+parser.add_argument("--share", action="store_true")
+parser.add_argument("--model_path", type=str, default="models/BAGEL-7B-MoT")
+args = parser.parse_args()
 
 # Model Initialization
-model_path = "/path/to/BAGEL-7B-MoT/weights" #Download from https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT
+model_path = args.model_path #Download from https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT to models/BAGEL-7B-MoT
 
 llm_config = Qwen2Config.from_json_file(os.path.join(model_path, "llm_config.json"))
 llm_config.qk_norm = True
@@ -92,6 +100,7 @@ model = load_checkpoint_and_dispatch(
     checkpoint=os.path.join(model_path, "ema.safetensors"),
     device_map=device_map,
     offload_buffers=True,
+    offload_folder="offload",
     dtype=torch.bfloat16,
     force_hooks=True,
 ).eval()
@@ -287,7 +296,7 @@ with gr.Blocks() as demo:
         
         thinking_output = gr.Textbox(label="Thinking Process", visible=False)
         img_output = gr.Image(label="Generated Image")
-        gen_btn = gr.Button("Generate")
+        gen_btn = gr.Button("Generate", variant="primary")
         
         # Dynamically show/hide thinking process box and parameters
         def update_thinking_visibility(show):
@@ -312,7 +321,8 @@ with gr.Blocks() as demo:
             )
             return image, thinking if thinking else ""
         
-        gen_btn.click(
+        gr.on(
+            triggers=[gen_btn.click, txt_input.submit],
             fn=process_text_to_image,
             inputs=[
                 txt_input, show_thinking, cfg_text_scale, 
@@ -378,7 +388,7 @@ with gr.Blocks() as demo:
                         edit_text_temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.3, step=0.1, interactive=True,
                                                         label="Temperature", info="Controls randomness in text generation")
         
-        edit_btn = gr.Button("Submit")
+        edit_btn = gr.Button("Submit", variant="primary")
         
         # Dynamically show/hide thinking process box for editing
         def update_edit_thinking_visibility(show):
@@ -405,7 +415,8 @@ with gr.Blocks() as demo:
             
             return edited_image, thinking if thinking else ""
         
-        edit_btn.click(
+        gr.on(
+            triggers=[edit_btn.click, edit_prompt.submit],
             fn=process_edit_image,
             inputs=[
                 edit_image_input, edit_prompt, edit_show_thinking, 
@@ -441,7 +452,7 @@ with gr.Blocks() as demo:
                 understand_max_new_tokens = gr.Slider(minimum=64, maximum=4096, value=512, step=64, interactive=True,
                                                    label="Max New Tokens", info="Maximum length of generated text, including potential thinking")
         
-        img_understand_btn = gr.Button("Submit")
+        img_understand_btn = gr.Button("Submit", variant="primary")
         
         # Process understanding with thinking option and hyperparameters
         def process_understanding(image, prompt, show_thinking, do_sample, 
@@ -452,7 +463,8 @@ with gr.Blocks() as demo:
             )
             return result
         
-        img_understand_btn.click(
+        gr.on(
+            triggers=[img_understand_btn.click, understand_prompt.submit],
             fn=process_understanding,
             inputs=[
                 img_input, understand_prompt, understand_show_thinking,
@@ -502,4 +514,10 @@ with gr.Blocks() as demo:
 </div>
 """)
 
-demo.launch(share=True)
+if __name__ == "__main__": 
+    demo.launch(
+        server_name=args.server_name, 
+        server_port=args.server_port,
+        share=args.share, 
+        inbrowser=True,
+    )
