@@ -39,6 +39,10 @@ from train.fsdp_utils import (
 
 @dataclass
 class ModelArguments:
+    model_path: str = field(
+        default="hf/BAGEL-7B-MoT",
+        metadata={"help": "Path of the pretrained BAGEL model."}
+    )
     llm_path: str = field(
         default="hf/Qwen2.5-0.5B-Instruct/",
         metadata={"help": "Path or HuggingFace repo ID of the pretrained Qwen2-style language model."}
@@ -208,6 +212,10 @@ class TrainingArguments:
     finetune_from_ema: bool = field(
         default=False,
         metadata={"help": "When resume_model_only=True, load the EMA (exponential moving average) weights instead of raw weights."}
+    )
+    finetune_from_hf: bool = field(
+        default=False,
+        metadata={"help": "Whether finetune from HugginFace model."}
     )
 
     # --- reporting frequency ---
@@ -387,23 +395,38 @@ def main():
     set_seed(seed)
 
     # Setup model:
-    llm_config = Qwen2Config.from_pretrained(model_args.llm_path)
+    if training_args.finetune_from_hf:
+        llm_config = Qwen2Config.from_json_file(os.path.join(model_args.model_path, "llm_config.json"))
+    else:
+        llm_config = Qwen2Config.from_pretrained(model_args.llm_path)
     llm_config.layer_module = model_args.layer_module
     llm_config.qk_norm = model_args.llm_qk_norm
     llm_config.tie_word_embeddings = model_args.tie_word_embeddings
     llm_config.freeze_und = training_args.freeze_und
-    language_model = Qwen2ForCausalLM.from_pretrained(model_args.llm_path, config=llm_config)
+    if training_args.finetune_from_hf:
+        language_model = Qwen2ForCausalLM(llm_config)
+    else:
+        language_model = Qwen2ForCausalLM.from_pretrained(model_args.llm_path, config=llm_config)
     if training_args.copy_init_moe:
         language_model.init_moe()
 
-    if training_args.visual_und:
-        vit_config = SiglipVisionConfig.from_pretrained(model_args.vit_path)
+    if training_args.visual_und:  
+        if training_args.finetune_from_hf:
+            vit_config = SiglipVisionConfig.from_json_file(os.path.join(model_args.model_path, "vit_config.json"))
+        else:
+            vit_config = SiglipVisionConfig.from_pretrained(model_args.vit_path)
         vit_config.num_hidden_layers = vit_config.num_hidden_layers + 1 + model_args.vit_select_layer
         vit_config.rope = model_args.vit_rope
-        vit_model = SiglipVisionModel.from_pretrained(model_args.vit_path, config=vit_config)
+        if training_args.finetune_from_hf:
+            vit_model = SiglipVisionModel(vit_config)
+        else:
+            vit_model = SiglipVisionModel.from_pretrained(model_args.vit_path, config=vit_config)
 
     if training_args.visual_gen:
-        vae_model, vae_config = load_ae(local_path=model_args.vae_path)
+        vae_model, vae_config = load_ae(
+            local_path=os.path.join(model_args.model_path, "ae.safetensors") 
+            if training_args.finetune_from_hf else model_args.vae_path
+        )
 
     config = BagelConfig(
         visual_gen=training_args.visual_gen,
@@ -428,7 +451,7 @@ def main():
         model.vit_model.vision_model.embeddings.convert_conv2d_to_linear(vit_config)
 
     # Setup tokenizer for model:
-    tokenizer = Qwen2Tokenizer.from_pretrained(model_args.llm_path)
+    tokenizer = Qwen2Tokenizer.from_pretrained(model_args.model_path if training_args.finetune_from_hf else model_args.llm_path)
     tokenizer, new_token_ids, num_new_tokens = add_special_tokens(tokenizer)
     if num_new_tokens > 0:
         model.language_model.resize_token_embeddings(len(tokenizer))

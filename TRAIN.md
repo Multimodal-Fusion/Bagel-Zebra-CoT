@@ -31,9 +31,10 @@ We offer examples in both raw-image folder and parquet shard formats. For other 
 
 # Training
 
-The baseline full‑feature recipe looks like this (replace environment variables with real paths or values):
+The baseline training recipe looks like this (replace environment variables with real paths or values):
 
 ```shell
+# Pre-training
 torchrun \
   --nnodes=$num_nodes \
   --node_rank=$node_rank \
@@ -50,13 +51,46 @@ torchrun \
   --results_dir $output_path \
   --checkpoint_dir $ckpt_path \
   --max_latent_size 64  # 32 for low-resolution pre-training
+
+# Fine-tuning
+torchrun \
+  --nnodes=$num_nodes \
+  --node_rank=$node_rank \
+  --nproc_per_node=8 \
+  --master_addr=$master_addr \
+  --master_port=$master_port \
+  train/pretrain_unified_navit.py \
+  --dataset_config_file ./data/configs/example.yaml \
+  --model_path $model_path \
+  --layer_module Qwen2MoTDecoderLayer \
+  --max_latent_size 64 \
+  --resume-from $model_path \
+  --finetune_from_hf True \
+  --auto_resume True \
+  --resume-model-only True \
+  --finetune-from-ema True \
+  --log_every 1 \
+  --lr 2e-5 \
+  --num_worker 1 \
+  --expected_num_tokens 10240 \
+  --max_num_tokens 11520 \
+  --max_num_tokens_per_sample 10240
 ```
 
-- **When fine-tuning BAGEL, please set `max_latent_size=64` to ensure the correct pretrained weights are loaded.**
-- The sum of num_used_data should be larger than NUM_GPUS x NUM_WORKERS.
-- For T2I-only fine-tuning, set `visual_und=False`; for VLM-only, set `visual_gen=False`.
+- **When fine-tuning BAGEL, set `max_latent_size=64` to ensure the correct pretrained weights are loaded.** If this is not set, an out-of-bounds error may occur.
+- The total value of `num_used_data` should be greater than `NUM_GPUS × NUM_WORKERS`. (For toy data, use `num_worker=1`.)
+- For T2I-only fine-tuning, set `visual_und=False`. For VLM-only fine-tuning, set `visual_gen=False`.
+- For debugging purposes, use smaller values for `expected_num_tokens`, `max_num_tokens`, and `max_num_tokens_per_sample`.
+- When fine-tuning on toy data, the loss behaves as follows:
+    ```shell
+    [2025-05-25 17:01:37] (step=0000000) Train Loss mse: 0.4063, Train Loss ce: 0.5504, Train Steps/Sec: 0.01, 
+    [2025-05-25 17:01:40] (step=0000001) Train Loss mse: 0.4121, Train Loss ce: 0.8152, Train Steps/Sec: 0.44, 
+    [2025-05-25 17:01:42] (step=0000002) Train Loss mse: 0.3876, Train Loss ce: 1.3411, Train Steps/Sec: 0.40, 
+    [2025-05-25 17:01:45] (step=0000003) Train Loss mse: 0.3825, Train Loss ce: 0.7360, Train Steps/Sec: 0.44, 
+    ```
 
- You are encouraged to adjust any of these hyperparameters to fit your GPU budget and the scale of your dataset. If you encounter any issues, please open an issue for assistance. 🎉
+
+You are encouraged to adjust any of these hyperparameters to fit your GPU budget and the scale of your dataset. If you encounter any issues, please open an issue for assistance. 🎉
 
 
 ## Model config
