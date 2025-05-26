@@ -3,9 +3,7 @@
 
 import copy
 from typing import List, Tuple, Optional
-import matplotlib.pyplot as plt
 
-from PIL import Image
 import torch
 import torch.nn.functional as F
 from torch import nn

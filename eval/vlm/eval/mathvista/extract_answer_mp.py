@@ -13,7 +13,6 @@
 import argparse
 import os
 import re
-import json
 import openai
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm

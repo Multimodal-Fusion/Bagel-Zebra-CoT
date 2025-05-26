@@ -16,7 +16,7 @@ import os
 import random
 
 import torch
-from datasets import concatenate_datasets, load_dataset
+from datasets import load_dataset
 from eval.vlm.utils import load_model_and_tokenizer, build_transform, process_conversation
 from tqdm import tqdm
 

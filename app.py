@@ -256,7 +256,6 @@ with gr.Blocks() as demo:
         
         # Add hyperparameter controls in an accordion
         with gr.Accordion("Inference Hyperparameters", open=False):
-            # 参数一排两个布局
             with gr.Group():
                 with gr.Row():
                     seed = gr.Slider(minimum=0, maximum=1000000, value=0, step=1, 

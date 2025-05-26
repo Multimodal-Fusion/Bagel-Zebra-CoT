@@ -10,9 +10,10 @@ torchrun \
   --master_port=$master_port \
   train/pretrain_unified_navit.py \
   --dataset_config_file ./data/configs/example.yaml \
-  --llm_path $llm_path \
+  --layer_module Qwen2MoTDecoderLayer \
   --vae_path $vae_path \
   --vit_path $vit_path \
+  --llm_path $llm_path \
   --use_flex True \
   --resume_from $resume_from \
   --results_dir $output_path \

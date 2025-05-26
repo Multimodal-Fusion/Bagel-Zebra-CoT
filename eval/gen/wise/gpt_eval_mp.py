@@ -8,7 +8,7 @@ import re
 import argparse
 import openai
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 import concurrent.futures
 
 openai.api_key = os.getenv('OPENAI_API_KEY')

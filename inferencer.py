@@ -2,16 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from copy import deepcopy
-from typing import List, Dict, Tuple, Optional, Union, Any
-import matplotlib.pyplot as plt
+from typing import List, Dict, Optional, Union, Any
 
 from PIL import Image
 import torch
-import torch.nn.functional as F
-from torch import nn
-from torch.nn.attention.flex_attention import create_block_mask
-from transformers.configuration_utils import PretrainedConfig
-from transformers.modeling_utils import PreTrainedModel
 
 from data.data_utils import pil_img2rgb
 from modeling.bagel.qwen2_navit import NaiveCache
