@@ -19,16 +19,21 @@ from modeling.bagel import (
 from modeling.qwen2 import Qwen2Tokenizer
 
 import argparse
+from accelerate.utils import BnbQuantizationConfig, load_and_quantize_model
 
 parser = argparse.ArgumentParser() 
 parser.add_argument("--server_name", type=str, default="127.0.0.1")
 parser.add_argument("--server_port", type=int, default=7860)
 parser.add_argument("--share", action="store_true")
 parser.add_argument("--model_path", type=str, default="models/BAGEL-7B-MoT")
+parser.add_argument("--mode", type=int, default=1)
+parser.add_argument("--zh", action="store_true")
 args = parser.parse_args()
 
 # Model Initialization
 model_path = args.model_path #Download from https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT to models/BAGEL-7B-MoT
+
+model_path = args.model_path 
 
 llm_config = Qwen2Config.from_json_file(os.path.join(model_path, "llm_config.json"))
 llm_config.qk_norm = True
@@ -94,17 +99,35 @@ else:
     for k in same_device_modules:
         if k in device_map:
             device_map[k] = first_device
-            
-model = load_checkpoint_and_dispatch(
-    model,
-    checkpoint=os.path.join(model_path, "ema.safetensors"),
-    device_map=device_map,
-    offload_buffers=True,
-    offload_folder="offload",
-    dtype=torch.bfloat16,
-    force_hooks=True,
-).eval()
 
+if args.mode == 1:
+    model = load_checkpoint_and_dispatch(
+        model,
+        checkpoint=os.path.join(model_path, "ema.safetensors"),
+        device_map=device_map,
+        offload_buffers=True,
+        offload_folder="offload",
+        dtype=torch.bfloat16,
+        force_hooks=True,
+    ).eval()
+elif args.mode == 2:
+    bnb_quantization_config = BnbQuantizationConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=False, bnb_4bit_quant_type="nf4")
+    model = load_and_quantize_model(
+        model, 
+        weights_location=os.path.join(model_path, "ema.safetensors"), 
+        bnb_quantization_config=bnb_quantization_config,
+        device_map=device_map,
+        offload_folder="offload",
+    ).eval()
+else:
+    bnb_quantization_config = BnbQuantizationConfig(load_in_8bit=True, torch_dtype=torch.float32)
+    model = load_and_quantize_model(
+        model, 
+        weights_location=os.path.join(model_path, "ema.safetensors"), 
+        bnb_quantization_config=bnb_quantization_config,
+        device_map=device_map,
+        offload_folder="offload",
+    ).eval()
 
 # Inferencer Preparing 
 inferencer = InterleaveInferencer(
@@ -366,7 +389,7 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     edit_cfg_renorm_type = gr.Dropdown(choices=["global", "local", "text_channel"], 
                                                      value="text_channel", label="CFG Renorm Type", 
-                                                     info="If the genrated image is blurry, use 'global")
+                                                     info="'If the genrated image is blurry, use 'global'")
                     edit_cfg_renorm_min = gr.Slider(minimum=0.0, maximum=1.0, value=0.0, step=0.1, interactive=True,
                                                   label="CFG Renorm Min", info="1.0 disables CFG-Renorm")
                 
@@ -513,7 +536,70 @@ with gr.Blocks() as demo:
 </div>
 """)
 
+UI_TRANSLATIONS = {
+    "📝 Text to Image":"📝 文生图",
+    "Prompt":"提示词",
+    "Thinking":"思考模式",
+    "Inference Hyperparameters":"推理参数",
+    "Seed":"种子",
+    "0 for random seed, positive for reproducible results":"0为随机种子，正数表示可重复结果",
+    "Image Ratio":"图片比例",
+    "The longer size is fixed to 1024":"长边固定为1024",
+    "CFG Text Scale":"CFG 文本规模",
+    "Controls how strongly the model follows the text prompt (4.0-8.0)":"控制模型是否遵循文本提示（4.0-8.0）",
+    "CFG Interval":"CFG 间隔",
+    "Start of CFG application interval (end is fixed at 1.0)":"CFG 应用间隔的开始（结束固定为1.0）",
+    "CFG Renorm Type":"CFG 重新归一化类型",
+    "If the genrated image is blurry, use 'global'":"如果生成的图像模糊，请使用'global'",
+    "CFG Renorm Min":"CFG 重新归一化最小值",
+    "1.0 disables CFG-Renorm":"1.0 禁用 CFG 重新归一化",
+    "Timesteps":"时间步数",
+    "Total denoising steps":"总去噪步数",
+    "Timestep Shift":"时间偏移",
+    "Higher values for layout, lower for details":"布局更高，细节更低",
+    "Sampling":"采样",
+    "Enable sampling for text generation":"为文本生成启用采样",
+    "Max Think Tokens":"最大思考标记数",
+    "Maximum number of tokens for thinking":"思考的最大标记数",
+    "Temperature":"温度",
+    "Controls randomness in text generation":"控制文本生成的随机性",
+    "Thinking Process":"思考过程",
+    "Generated Image":"生成图像",
+    "Generate":"开始生成",
+    "🖌️ Image Edit":"🖌️ 图像编辑",
+    "Input Image":"图像输入",
+    "Result":"结果",
+    "Controls how strongly the model follows the text prompt":"控制模型是否遵循文本提示的强度",
+    "CFG Image Scale":"CFG图像规模",
+    "Controls how much the model preserves input image details":"控制模型是否保留输入图像细节的强度",
+    "Submit":"开始生成",
+    "🖼️ Image Understanding":"🖼️ 图像理解",
+    "Controls randomness in text generation (0=deterministic, 1=creative)":"控制文本生成的随机性（0=确定，1= creative）",
+    "Max New Tokens":"最大新标记",
+    "Maximum length of generated text, including potential thinking":"生成文本的最大长度，包括可能的思考",
+}
+
+def apply_localization(block):
+    def process_component(component):
+        if not component:
+            return
+        
+        for attr in ['label', 'info', 'placeholder']:
+            if hasattr(component, attr):
+                text = getattr(component, attr)
+                if text in UI_TRANSLATIONS:
+                    setattr(component, attr, UI_TRANSLATIONS[text])
+        
+        if hasattr(component, 'children'):
+            for child in component.children:
+                process_component(child)
+    
+    process_component(block)
+    return block
+
 if __name__ == "__main__": 
+    if args.zh:
+        demo = apply_localization(demo)
     demo.launch(
         server_name=args.server_name, 
         server_port=args.server_port,

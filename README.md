@@ -109,13 +109,14 @@ cd BAGEL
 conda create -n bagel python=3.10 -y
 conda activate bagel
 pip install -r requirements.txt
+pip install flash_attn==2.5.8 --no-build-isolation
 ```
 
 2️⃣  Download pretrained checkpoint
 ```python
 from huggingface_hub import snapshot_download
 
-save_dir = "/path/to/save/BAGEL-7B-MoT"
+save_dir = "models/BAGEL-7B-MoT"
 repo_id = "ByteDance-Seed/BAGEL-7B-MoT"
 cache_dir = save_dir + "/cache"
 
@@ -129,12 +130,20 @@ snapshot_download(cache_dir=cache_dir,
 
 ```
 
-3️⃣  Go to [`inference.ipynb`](inference.ipynb) to start playing with BAGEL!
-
-4️⃣ Use Gradio WebUI to start playing with BAGEL!
+3️⃣ Use Gradio WebUI to start playing with BAGEL!
 ```bash
-pip install gradio
+# For 32GB+ VRAM GPU or multi GPUs.
 python app.py
+```
+
+```bash
+# For 12~32GB VRAM GPU, recommend using NF4 quantization. And use Chinese interface.
+python app.py --mode 2 --zh
+```
+
+```bash
+# For 22~32GB VRAM GPU, not recommended to use INT8 quantization.
+python app.py  --mode 3
 ```
 
 ## 🔥 Train & Eval
