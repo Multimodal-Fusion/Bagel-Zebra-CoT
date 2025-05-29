@@ -389,7 +389,7 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     edit_cfg_renorm_type = gr.Dropdown(choices=["global", "local", "text_channel"], 
                                                      value="text_channel", label="CFG Renorm Type", 
-                                                     info="'If the genrated image is blurry, use 'global'")
+                                                     info="If the genrated image is blurry, use 'global'")
                     edit_cfg_renorm_min = gr.Slider(minimum=0.0, maximum=1.0, value=0.0, step=0.1, interactive=True,
                                                   label="CFG Renorm Min", info="1.0 disables CFG-Renorm")
                 
