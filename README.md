@@ -76,6 +76,8 @@ As we scale up BAGEL’s pretraining with more multimodal tokens, we observe con
 
 We sincerely thank all contributors from the open community for their valuable support.
 
+- **May 30, 2025:** Many thanks to [@prartio](https://github.com/prartio) for contributing the [Windows 11 installation guideline](https://github.com/ByteDance-Seed/Bagel/issues/92), and to [@gluttony-10](https://github.com/gluttony-10) for his work on the [inference of quantization](https://github.com/ByteDance-Seed/Bagel/pull/88).
+- **May 29, 2025:** Special thanks to [@jnc-nj](https://github.com/jnc-nj) for contributing the [Dockerfile](https://github.com/ByteDance-Seed/Bagel/issues/75).
 - **May 26, 2025:** Thanks to [@neverbiasu](https://github.com/neverbiasu) for contributing [ComfyUI](https://github.com/neverbiasu/ComfyUI-BAGEL).
 - **May 25, 2025:** Special thanks to [@LeanModels](https://github.com/LeanModels) for providing the [DF11-compressed version](https://huggingface.co/DFloat11/BAGEL-7B-MoT-DF11), and to [@Gapeleon](https://huggingface.co/Gapeleon) for the [INT8-compressed version](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8). We also appreciate [@gluttony-10](https://github.com/gluttony-10) for contributions to the [Windows package](https://github.com/ByteDance-Seed/Bagel/issues/51).
 - **May 24, 2025:** Together with [@wangwei1237](https://github.com/wangwei1237), [@gluttony-10](https://github.com/gluttony-10), and [@KingNish24](https://github.com/KingNish24), we built a Gradio [app](app.py) and launched a [Hugging Face Space](https://huggingface.co/spaces/ByteDance-Seed/BAGEL).
@@ -179,15 +181,15 @@ Please See [EVAL](EVAL.md) for more details.
 | Janus-Pro-7B | 0.80      | 0.35 | 
 | SD3-Medium   | 0.74      | - |
 | FLUX-1-dev   | 0.82      | 0.50 |
-| **BAGEL**    | -  | **0.52** |
-| **BAGEL + CoT**    | **0.88**  | **0.70** |
+| **BAGEL**    | 0.82  | **0.52** |
+| **BAGEL + Rewritter/CoT**    | **0.88**  | **0.70** |
 
 ### 3. Image Editing
 
 | Model         | GEdit-Bench-EN (SC) ↑ | GEdit-Bench-EN (PQ) ↑ | GEdit-Bench-EN (O) ↑ | IntelligentBench ↑ |
 | ------------- | --------------------- | --------------------- | ------------------- | ------------------ |
 | Step1X-Edit   | 7.09                  | 6.76                  | **6.70**            | 14.9               |
-| Gemini-2-exp. | 6.73                  | 6.61                  | 6.32                | **57.6**           |
+| Gemini 2.0 | 6.73                  | 6.61                  | 6.32                | **57.6**           |
 | **BAGEL**     | **7.36**              | **6.83**              | 6.52                | 44.0               |
 | **BAGEL+CoT** | –                   | –                     | –                   | 55.3               |
 
