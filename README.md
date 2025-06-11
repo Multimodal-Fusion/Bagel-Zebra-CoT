@@ -33,7 +33,7 @@
         alt="BAGEL Model"
     />
   </a>
-  <a href="https://discord.gg/Z836xxzy">
+  <a href="https://discord.gg/eXQNFhWe">
     <img
       src="https://img.shields.io/badge/BAGEL-Discord-5865F2?logo=discord&logoColor=purple"
       alt="BAGEL Discord"
