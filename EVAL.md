@@ -121,51 +121,51 @@ Directly run `scripts/eval/run_kris.sh` to evaluate KRIS-Bench. The output will 
 <pre>
 Category, meta-category, and overall average scores (100-point scale):
 Attribute Perception:
-  VC: 81.31
-  VQ: 79.56
-  IF: 53.38
-  AVG: 71.42
+  VC: 76.64
+  VQ: 74.45
+  IF: 41.73
+  AVG: 64.27
 Spatial Perception:
-  VC: 76.20
-  VQ: 84.00
-  IF: 49.60
-  AVG: 69.93
+  VC: 70.25
+  VQ: 80.00
+  IF: 37.00
+  AVG: 62.42
 Temporal Prediction:
-  VC: 49.19
-  VQ: 69.46
-  IF: 43.24
-  AVG: 53.96
+  VC: 36.49
+  VQ: 61.82
+  IF: 29.05
+  AVG: 42.45
 Social Science:
-  VC: 80.96
-  VQ: 83.04
-  IF: 49.60
-  KP: 43.68
-  AVG: 64.32
+  VC: 76.20
+  VQ: 78.80
+  IF: 37.00
+  KP: 29.60
+  AVG: 55.40
 Natural Science:
-  VC: 75.67
-  VQ: 87.23
-  IF: 52.21
-  KP: 44.12
-  AVG: 64.81
+  VC: 69.59
+  VQ: 84.03
+  IF: 40.27
+  KP: 30.15
+  AVG: 56.01
 Logical Reasoning:
-  VC: 84.13
-  VQ: 88.53
-  IF: 41.07
-  KP: 34.40
-  AVG: 62.03
+  VC: 80.17
+  VQ: 85.67
+  IF: 26.33
+  KP: 18.00
+  AVG: 52.54
 Instruction Decomposition:
-  VC: 52.13
-  VQ: 75.60
-  IF: 53.60
-  AVG: 60.44
+  VC: 40.17
+  VQ: 69.50
+  IF: 42.00
+  AVG: 50.56
 Factual Knowledge:
-  AVG: 68.21
+  AVG: 60.26
 Conceptual Knowledge:
-  AVG: 64.69
+  AVG: 55.86
 Procedural Knowledge:
-  AVG: 61.35
+  AVG: 51.69
 Overall:
-  AVG: 64.97
+  AVG: 56.21
 </pre>
 </details>
 
@@ -174,51 +174,51 @@ Overall:
 <pre>
 Category, meta-category, and overall average scores (100-point scale):
 Attribute Perception:
-  VC: 80.07
-  VQ: 79.20
-  IF: 62.55
-  AVG: 73.94
+  VC: 75.09
+  VQ: 74.00
+  IF: 53.18
+  AVG: 67.42
 Spatial Perception:
-  VC: 83.00
-  VQ: 89.80
-  IF: 51.20
-  AVG: 74.67
+  VC: 78.75
+  VQ: 87.25
+  IF: 39.00
+  AVG: 68.33
 Temporal Prediction:
-  VC: 58.65
-  VQ: 84.86
-  IF: 57.30
-  AVG: 66.94
+  VC: 48.31
+  VQ: 81.08
+  IF: 46.62
+  AVG: 58.67
 Social Science:
-  VC: 84.32
-  VQ: 83.52
-  IF: 61.28
-  KP: 54.24
-  AVG: 70.84
+  VC: 80.40
+  VQ: 79.40
+  IF: 51.60
+  KP: 42.80
+  AVG: 63.55
 Natural Science:
-  VC: 74.15
-  VQ: 86.36
-  IF: 61.68
-  KP: 54.30
-  AVG: 69.12
+  VC: 67.68
+  VQ: 82.95
+  IF: 52.10
+  KP: 42.88
+  AVG: 61.40
 Logical Reasoning:
-  VC: 70.27
-  VQ: 83.73
-  IF: 42.67
-  KP: 37.33
-  AVG: 58.50
+  VC: 62.83
+  VQ: 79.67
+  IF: 28.33
+  KP: 21.67
+  AVG: 48.12
 Instruction Decomposition:
-  VC: 58.27
-  VQ: 73.47
-  IF: 48.80
-  AVG: 60.18
+  VC: 47.83
+  VQ: 66.83
+  IF: 36.00
+  AVG: 50.22
 Factual Knowledge:
-  AVG: 72.95
+  AVG: 66.18
 Conceptual Knowledge:
-  AVG: 69.54
+  AVG: 61.92
 Procedural Knowledge:
-  AVG: 59.22
+  AVG: 49.02
 Overall:
-  AVG: 68.14
+  AVG: 60.18
 </pre>
 </details>
 

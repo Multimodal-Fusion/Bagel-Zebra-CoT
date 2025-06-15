@@ -79,11 +79,11 @@ meta_categories = {
 }
 meta_category_order = list(meta_categories.keys())
 
-def normalize_score(score, max_score=5):
+def normalize_score(score):
     """Normalize a score to a 100-point scale."""
-    return (score / max_score) * 100 if score is not None else None
+    return (score - 1) * 25 if score is not None else None
 
-def summarize_benchmark_scores_with_normalization(results_dir, max_score=5):
+def summarize_benchmark_scores_with_normalization(results_dir):
     """
     Calculate normalized benchmark scores for each category and subitem.
     Only non-None scores are included in results.
@@ -108,7 +108,7 @@ def summarize_benchmark_scores_with_normalization(results_dir, max_score=5):
                 for m in metrics:
                     if m in sample and sample[m] is not None:
                         value = sample[m]
-                        norm_value = normalize_score(value, max_score)
+                        norm_value = normalize_score(value)
                         subitem_scores[m].append(norm_value)
                         type_all_scores[b_type][m].append(norm_value)
                         type_all_values_flat[b_type].append(norm_value)
