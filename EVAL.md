@@ -76,3 +76,304 @@ Please follow [GEdit-Bench](https://github.com/stepfun-ai/Step1X-Edit/blob/main/
 
 # IntelligentBench
 TBD
+
+
+# KRIS
+We modify the code in [KRIS-Bench](https://github.com/mercurystraw/Kris_Bench) for faster evaluation.
+
+## Data prepration
+Please download the benchmark data from [KRIS-Bench](https://huggingface.co/datasets/Liang0223/KRIS_Bench) and and place it in the `KRIS_Bench` directory.
+
+The final directory structure is:
+```shell
+KRIS_Bench
+├── abstract_reasoning
+├── anomaly_correction
+├── biology
+├── chemistry
+├── color_change
+├── count_change
+├── geography
+├── humanities
+├── mathematics
+├── medicine
+├── multi-element_composition
+├── multi-instruction_execution
+├── part_completion
+├── physics
+├── position_movement
+├── practical_knowledge
+├── rule-based_reasoning
+├── size_adjustment
+├── temporal_prediction
+└── viewpoint_change
+```
+
+## Evaluation
+Directly run `scripts/eval/run_kris.sh` to evaluate KRIS-Bench. The output will be saved in `$output_path`.
+- Set `$model_path` and `$output_path` for the path for checkpoint and log.
+- Set `$openai_api_key` in `scripts/eval/run_kris.sh` and `your_api_url` in `eval/gen/kris/metrics_xx.py`. The default GPT version is `gpt-4o-2024-11-20`.
+- Use `think` for thinking mode.
+- We set `cfg_text_scale=4` and `cfg_img_scale=1.5` by default. Additionally, `cfg_renorm_min=0` is specified for CFG Renorm.
+
+<details>
+<summary><b>Results</b></summary>
+<pre>
+Category, meta-category, and overall average scores (100-point scale):
+Attribute Perception:
+  VC: 81.31
+  VQ: 79.56
+  IF: 53.38
+  AVG: 71.42
+Spatial Perception:
+  VC: 76.20
+  VQ: 84.00
+  IF: 49.60
+  AVG: 69.93
+Temporal Prediction:
+  VC: 49.19
+  VQ: 69.46
+  IF: 43.24
+  AVG: 53.96
+Social Science:
+  VC: 80.96
+  VQ: 83.04
+  IF: 49.60
+  KP: 43.68
+  AVG: 64.32
+Natural Science:
+  VC: 75.67
+  VQ: 87.23
+  IF: 52.21
+  KP: 44.12
+  AVG: 64.81
+Logical Reasoning:
+  VC: 84.13
+  VQ: 88.53
+  IF: 41.07
+  KP: 34.40
+  AVG: 62.03
+Instruction Decomposition:
+  VC: 52.13
+  VQ: 75.60
+  IF: 53.60
+  AVG: 60.44
+Factual Knowledge:
+  AVG: 68.21
+Conceptual Knowledge:
+  AVG: 64.69
+Procedural Knowledge:
+  AVG: 61.35
+Overall:
+  AVG: 64.97
+</pre>
+</details>
+
+<details>
+<summary><b>Results w/ CoT</b></summary>
+<pre>
+Category, meta-category, and overall average scores (100-point scale):
+Attribute Perception:
+  VC: 80.07
+  VQ: 79.20
+  IF: 62.55
+  AVG: 73.94
+Spatial Perception:
+  VC: 83.00
+  VQ: 89.80
+  IF: 51.20
+  AVG: 74.67
+Temporal Prediction:
+  VC: 58.65
+  VQ: 84.86
+  IF: 57.30
+  AVG: 66.94
+Social Science:
+  VC: 84.32
+  VQ: 83.52
+  IF: 61.28
+  KP: 54.24
+  AVG: 70.84
+Natural Science:
+  VC: 74.15
+  VQ: 86.36
+  IF: 61.68
+  KP: 54.30
+  AVG: 69.12
+Logical Reasoning:
+  VC: 70.27
+  VQ: 83.73
+  IF: 42.67
+  KP: 37.33
+  AVG: 58.50
+Instruction Decomposition:
+  VC: 58.27
+  VQ: 73.47
+  IF: 48.80
+  AVG: 60.18
+Factual Knowledge:
+  AVG: 72.95
+Conceptual Knowledge:
+  AVG: 69.54
+Procedural Knowledge:
+  AVG: 59.22
+Overall:
+  AVG: 68.14
+</pre>
+</details>
+
+
+# RISE
+We modify the code in [RISEBench](https://github.com/PhoenixZ810/RISEBench) for faster evaluation.
+
+## Data prepration
+Please download the benchmark data from [RISEBench](https://huggingface.co/datasets/PhoenixZ/RISEBench) and and place it in the `data` directory.
+
+The final directory structure is:
+```shell
+data
+├── datav2_total_w_subtask.json
+├── causal_reasoning_images
+├── logical_reasoning_images
+├── spatial_reasoning_images
+└── temporal_reasoning_images
+```
+
+## Evaluation
+Directly run `scripts/eval/run_rise.sh` to evaluate RISEBench. The output will be saved in `$output_path`.
+- Set `$model_path` and `$output_path` for the path for checkpoint and log.
+- Set `$openai_api_key` in `scripts/eval/run_rise.sh` and `your_api_url` in `eval/gen/rise/gpt_eval.py`. The default GPT version is `gpt-4.1-2025-04-14`.
+- Use `think` for thinking mode.
+- We set `cfg_text_scale=4` and `cfg_img_scale=2.0` by default. Additionally, `cfg_renorm_min=0` is specified for CFG Renorm.
+
+<details>
+<summary><b>Results (cfg_img_scale=1.5)</b></summary>
+<pre>
+                                                -  Score-Origin  Score-Percentage  Accuracy
+0                                         Overall      2.537778         38.444444  0.061111
+1                                        Temporal      2.654118         41.352941  0.023529
+2                                          Causal      2.788889         44.722222  0.055556
+3                                         Spatial      3.452000         61.300000  0.140000
+4                                         Logical      1.080000          2.000000  0.011765
+5                               Overall_Reasoning      2.458333         36.458333       NaN
+6                         Overall_ApprConsistency      3.141643         53.541076       NaN
+7                Overall_VisualPlausibility_total      3.920000         73.000000       NaN
+8                              Temporal_Reasoning      2.588235         39.705882       NaN
+9                            Temporal_Consistency      3.250000         56.250000       NaN
+10                               Temporal_Quality      3.505882         62.647059       NaN
+11                               Causal_Reasoning      2.733333         43.333333       NaN
+12                             Causal_Consistency      3.579545         64.488636       NaN
+13                                 Causal_Quality      3.688889         67.222222       NaN
+14                              Spatial_Reasoning      3.300000         57.500000       NaN
+15                            Spatial_Consistency      3.330000         58.250000       NaN
+16                                Spatial_Quality      4.480000         87.000000       NaN
+17                              Logical_Reasoning      1.047059          1.176471       NaN
+18                            Logical_Consistency      2.364706         34.117647       NaN
+19                          Temp-Life Progression      2.757895         43.947368  0.000000
+20                      Temp-Material Progression      2.500000         37.500000  0.021739
+21                      Temp-Environmental Cycles      3.061538         51.538462  0.076923
+22                   Temp-Societal Transformation      2.628571         40.714286  0.000000
+23                  Causal-Structural Deformation      2.766667         44.166667  0.055556
+24                        Causal-State Transition      3.112000         52.800000  0.080000
+25  Causal-Chemical and Biological Transformation      2.325000         33.125000  0.062500
+26                   Causal-Physics Manifestation      2.800000         45.000000  0.000000
+27                         Spa-Component Assembly      3.434783         60.869565  0.043478
+28                         Spa-Object Arrangement      2.733333         43.333333  0.000000
+29                       Spa-Viewpoint Generation      3.629630         65.740741  0.222222
+30                       Spa-Structural Inference      4.066667         76.666667  0.133333
+31                           Spa-Layout Reasoning      3.234783         55.869565  0.217391
+32                       Logic-Pattern Prediction      1.035484          0.887097  0.000000
+33                  Logic-Mathematical Derivation      1.350000          8.750000  0.071429
+34                           Logic-Puzzle Solving      1.020000          0.500000  0.000000
+</pre>
+</details>
+
+<details>
+<summary><b>Results w/ CoT</b></summary>
+<pre>
+                                                -  Score-Origin  Score-Percentage  Accuracy
+0                                         Overall      2.933333         48.333333  0.119444
+1                                        Temporal      3.336471         58.411765  0.058824
+2                                          Causal      3.608889         65.222222  0.177778
+3                                         Spatial      3.492000         62.300000  0.210000
+4                                         Logical      1.157647          3.941176  0.011765
+5                               Overall_Reasoning      2.836111         45.902778       NaN
+6                         Overall_ApprConsistency      3.951841         73.796034       NaN
+7                Overall_VisualPlausibility_total      4.203636         80.090909       NaN
+8                              Temporal_Reasoning      3.188235         54.705882       NaN
+9                            Temporal_Consistency      4.225000         80.625000       NaN
+10                               Temporal_Quality      4.200000         80.000000       NaN
+11                               Causal_Reasoning      3.533333         63.333333       NaN
+12                             Causal_Consistency      4.386364         84.659091       NaN
+13                                 Causal_Quality      4.100000         77.500000       NaN
+14                              Spatial_Reasoning      3.350000         58.750000       NaN
+15                            Spatial_Consistency      4.300000         82.500000       NaN
+16                                Spatial_Quality      4.300000         82.500000       NaN
+17                              Logical_Reasoning      1.141176          3.529412       NaN
+18                            Logical_Consistency      2.835294         45.882353       NaN
+19                          Temp-Life Progression      3.526316         63.157895  0.052632
+20                      Temp-Material Progression      3.208696         55.217391  0.086957
+21                      Temp-Environmental Cycles      3.584615         64.615385  0.000000
+22                   Temp-Societal Transformation      3.200000         55.000000  0.000000
+23                  Causal-Structural Deformation      3.750000         68.750000  0.138889
+24                        Causal-State Transition      3.792000         69.800000  0.320000
+25  Causal-Chemical and Biological Transformation      3.512500         62.812500  0.062500
+26                   Causal-Physics Manifestation      2.984615         49.615385  0.153846
+27                         Spa-Component Assembly      3.652174         66.304348  0.304348
+28                         Spa-Object Arrangement      2.700000         42.500000  0.000000
+29                       Spa-Viewpoint Generation      3.800000         70.000000  0.259259
+30                       Spa-Structural Inference      3.680000         67.000000  0.266667
+31                           Spa-Layout Reasoning      3.260870         56.521739  0.130435
+32                       Logic-Pattern Prediction      1.064516          1.612903  0.000000
+33                  Logic-Mathematical Derivation      1.707143         17.678571  0.071429
+34                           Logic-Puzzle Solving      1.037500          0.937500  0.000000
+</pre>
+</details>
+
+
+# ImgEdit
+We modify the code in [ImgEdit](https://github.com/PKU-YuanGroup/ImgEdit) for faster evaluation.
+
+## Data prepration
+Please download the benchmark data from [ImgEdit-Bench](https://huggingface.co/datasets/sysuyy/ImgEdit/blob/main/Benchmark.tar) and and place it in the `Benchmark` directory.
+
+The final directory structure is:
+```shell
+Benchmark
+├── hard
+├── multiturn
+└── singleturn
+    ├── judge_prompt.json
+    ├── singleturn.json
+    ├── animal
+    ├── architecture
+    ├── clothes
+    ├── compose
+    ├── daily object
+    ├── for_add
+    ├── human
+    ├── style
+    └── transport
+```
+
+## Evaluation
+Directly run `scripts/eval/run_imgedit.sh` to evaluate ImgEdit-Bench. The output will be saved in `$output_path`.
+- Set `$model_path` and `$output_path` for the path for checkpoint and log.
+- Set `$openai_api_key` in `scripts/eval/run_imgedit.sh` and `your_api_url` in `eval/gen/imgedit/basic_bench.py`. The default GPT version is `gpt-4o-2024-11-20`.
+- We set `cfg_text_scale=4` and `cfg_img_scale=1.5` by default. Additionally, `cfg_renorm_min=0` is specified for CFG Renorm.
+
+<details>
+<summary><b>Results</b></summary>
+<pre>
+background: 3.28
+adjust: 3.23
+style: 4.26
+extract: 1.48
+remove: 2.99
+add: 3.45
+replace: 3.76
+compose: 3.18
+action: 4.38
+overall: 3.28
+</pre>
+</details>

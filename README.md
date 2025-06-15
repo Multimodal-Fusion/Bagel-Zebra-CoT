@@ -76,6 +76,8 @@ As we scale up BAGEL’s pretraining with more multimodal tokens, we observe con
 
 We sincerely thank all contributors from the open community for their valuable support.
 
+- **June 15, 2025:** We have updated and fixed the evaluation results for [KRIS-Bench](https://github.com/mercurystraw/Kris_Bench) and [RISEBench](https://github.com/PhoenixZ810/RISEBench). **Our model, BAGEL, demonstrates performance comparable to Gemini 2.0 on these reasoning benchmarks.** We have also released the evaluation code for both KRIS-Bench and RISEBench, along with [ImgEdit-Bench](https://github.com/PKU-YuanGroup/ImgEdit). For further details, please refer to [EVAL](./EVAL.md).
+- **Jun 5, 2025:** Thanks to [@davideuler](https://github.com/davideuler) for contributing the [Dockerfile with prebuilt flash_attn](https://github.com/ByteDance-Seed/Bagel/issues/125).
 - **May 30, 2025:** Many thanks to [@prartio](https://github.com/prartio) for contributing the [Windows 11 installation guideline](https://github.com/ByteDance-Seed/Bagel/issues/92), and to [@gluttony-10](https://github.com/gluttony-10) for his work on the [inference of quantization](https://github.com/ByteDance-Seed/Bagel/pull/88).
 - **May 29, 2025:** Special thanks to [@jnc-nj](https://github.com/jnc-nj) for contributing the [Dockerfile](https://github.com/ByteDance-Seed/Bagel/issues/75).
 - **May 26, 2025:** Thanks to [@neverbiasu](https://github.com/neverbiasu) for contributing [ComfyUI](https://github.com/neverbiasu/ComfyUI-BAGEL).
@@ -168,7 +170,7 @@ Please See [EVAL](EVAL.md) for more details.
 
 ### 1. Visual Understanding
 
-| Model | MME ↑ | MMBench ↑ |   MMMU ↑ | MM-Vet ↑ | MathVista ↑ |
+| Model | MME | MMBench |   MMMU | MM-Vet | MathVista |
 | ------------------- | ----------: | ----------: | -------: | -------: | ----------: |
 | Janus-Pro-7B        | -  |     79.2 |     41.0 |     50.0 |           – |
 | Qwen2.5-VL-7B      | 2347    |   83.5 | **58.6** |     67.1 |           68.2 |
@@ -176,22 +178,25 @@ Please See [EVAL](EVAL.md) for more details.
 
 ### 2. Text-to-Image Generation
 
-| Model        | GenEval ↑ | WISE  ↑|
+| Model        | GenEval | WISE |
 | ------------ | --------- | --------- |
 | Janus-Pro-7B | 0.80      | 0.35 | 
 | SD3-Medium   | 0.74      | - |
 | FLUX-1-dev   | 0.82      | 0.50 |
-| **BAGEL**    | 0.82  | **0.52** |
+| **BAGEL**    | 0.82  | 0.52  |
 | **BAGEL + Rewritter/CoT**    | **0.88**  | **0.70** |
 
 ### 3. Image Editing
 
-| Model         | GEdit-Bench-EN (SC) ↑ | GEdit-Bench-EN (PQ) ↑ | GEdit-Bench-EN (O) ↑ | IntelligentBench ↑ |
-| ------------- | --------------------- | --------------------- | ------------------- | ------------------ |
-| Step1X-Edit   | 7.09                  | 6.76                  | **6.70**            | 14.9               |
-| Gemini 2.0 | 6.73                  | 6.61                  | 6.32                | **57.6**           |
-| **BAGEL**     | **7.36**              | **6.83**              | 6.52                | 44.0               |
-| **BAGEL+CoT** | –                   | –                     | –                   | 55.3               |
+| Model         | GEdit-Bench-EN (SC) | GEdit-Bench-EN (PQ) | GEdit-Bench-EN (O) | IntelligentBench | KISE-Bench | RISEBench |
+| ------------- | ---------------------: | ---------------------: | -------------------: | ------------------: | ------------: | ------------: | 
+| Step1X-Edit   | 🥉7.09                | 🥉6.76                | 🥈6.70            | 14.9               |  43.29   |  1.9  |
+| Gemini 2.0    | 6.73                  | 6.61                  | 6.32                | 🥈57.6             | 62.41   |  🥈13.3  |
+| GPT-4o        | 🥇7.85              | 🥇7.62              | 🥇7.53            | 🥇78.9           | 🥇80.09   |  🥇28.9  |
+| **BAGEL**     | 🥈7.36                | 🥈6.83                | 🥉6.52                | 44.0               |  🥉64.97   |  6.1 |
+| **BAGEL+CoT** | –                     | –                     | –                   | 🥉55.3             |  🥈68.14   |  🥉11.9 |
+
+
 
 
 ## ✍️ Citation
