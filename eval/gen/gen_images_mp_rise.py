@@ -223,7 +223,7 @@ def editing_image_with_think(
     )
     
     with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
-        unpacked_latent = gen_model.generate_image_mix(
+        unpacked_latent = gen_model.generate_image(
             past_key_values=past_key_values,
             cfg_text_past_key_values=cfg_text_past_key_values,
             cfg_img_past_key_values=cfg_img_past_key_values,
@@ -349,7 +349,7 @@ def editing_image(
     )
     
     with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
-        unpacked_latent = gen_model.generate_image_mix(
+        unpacked_latent = gen_model.generate_image(
             past_key_values=past_key_values,
             cfg_text_past_key_values=cfg_text_past_key_values,
             cfg_img_past_key_values=cfg_img_past_key_values,
