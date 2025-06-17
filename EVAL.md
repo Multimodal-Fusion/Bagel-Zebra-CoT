@@ -71,7 +71,15 @@ Directly run `scripts/eval/run_wise.sh` to evaluate WISE. The output will be sav
 
 
 # GEdit-Bench
-Please follow [GEdit-Bench](https://github.com/stepfun-ai/Step1X-Edit/blob/main/GEdit-Bench/EVAL.md) for evaluation.
+We adopt the code in [GEdit-Bench](https://github.com/stepfun-ai/Step1X-Edit/blob/main/GEdit-Bench/EVAL.md) for evaluation.
+
+## Evaluation
+
+Modify the model path, the output path, the api key, and the api url in `scripts/eval/run_gedit.sh`. Then, run the following command:
+```shell
+bash script/eval/run_gedit.sh
+```
+The GPT version for evaluation is `gpt-4.1-2025-04-14`.
 
 
 # IntelligentBench
