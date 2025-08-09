@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zebra-CoT Dataset Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .thought-header {
+            font-weight: 600;
+            color: #6366f1;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .thought-content {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            color: #4b5563;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #6366f1;
+            color: #6366f1;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .image-modal img {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-3">🦓</span>
+                    <h1 class="text-xl font-semibold text-gray-900">Zebra-CoT Dataset Explorer</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="loadRandomSample()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-random mr-2"></i>Random Sample
+                    </button>
+                    <button onclick="showStats()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-chart-bar mr-2"></i>Statistics
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex h-[calc(100vh-4rem)]">
+        <!-- Sidebar -->
+        <aside class="w-80 bg-white border-r border-gray-200 overflow-y-auto custom-scrollbar">
+            <div class="p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
+                <div id="categories-list" class="space-y-2">
+                    <div class="loader mx-auto"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Panel -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar">
+            <div id="welcome-screen" class="flex items-center justify-center h-full">
+                <div class="text-center">
+                    <span class="text-6xl">🦓</span>
+                    <h2 class="mt-4 text-2xl font-semibold text-gray-900">Welcome to Zebra-CoT Explorer</h2>
+                    <p class="mt-2 text-gray-600">Select a category from the sidebar to start exploring</p>
+                    <p class="mt-4 text-sm text-gray-500">Multimodal Chain-of-Thought Reasoning Dataset</p>
+                </div>
+            </div>
+
+            <div id="sample-viewer" class="hidden p-6">
+                <!-- Sample Navigation -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="previousSample()" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="text-sm text-gray-600">
+                                Sample <span id="current-index" class="font-semibold">1</span> of <span id="total-samples" class="font-semibold">-</span>
+                            </span>
+                            <button onclick="nextSample()" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" id="sample-input" min="1" class="w-20 px-2 py-1 border border-gray-300 rounded" placeholder="Go to">
+                            <button onclick="goToSample()" class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors">
+                                Go
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                            <button onclick="showTab('question')" id="tab-question" class="tab-active py-4 px-1 border-b-2 font-medium text-sm">
+                                Question
+                            </button>
+                            <button onclick="showTab('reasoning')" id="tab-reasoning" class="py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Reasoning
+                            </button>
+                            <button onclick="showTab('answer')" id="tab-answer" class="py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Answer
+                            </button>
+                            <button onclick="showTab('metadata')" id="tab-metadata" class="py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Metadata
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="p-6">
+                        <!-- Question Tab -->
+                        <div id="content-question" class="tab-content fade-in">
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Question</h3>
+                                <div id="question-text" class="bg-red-50 border border-red-200 rounded-lg p-4 text-gray-800"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Problem Images</h3>
+                                <div id="problem-images" class="image-grid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Reasoning Tab -->
+                        <div id="content-reasoning" class="tab-content hidden">
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Chain-of-Thought Reasoning</h3>
+                                <div id="reasoning-text" class="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto custom-scrollbar"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Reasoning Images</h3>
+                                <div id="reasoning-images" class="image-grid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Answer Tab -->
+                        <div id="content-answer" class="tab-content hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Final Answer</h3>
+                            <div id="answer-text" class="bg-green-50 border border-green-200 rounded-lg p-4 text-gray-800"></div>
+                        </div>
+
+                        <!-- Metadata Tab -->
+                        <div id="content-metadata" class="tab-content hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Sample Metadata</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-sm text-gray-500">Question Length</div>
+                                    <div id="meta-question-length" class="text-xl font-semibold text-gray-900">-</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-sm text-gray-500">Reasoning Length</div>
+                                    <div id="meta-reasoning-length" class="text-xl font-semibold text-gray-900">-</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-sm text-gray-500">Answer Length</div>
+                                    <div id="meta-answer-length" class="text-xl font-semibold text-gray-900">-</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-sm text-gray-500">Problem Images</div>
+                                    <div id="meta-problem-images" class="text-xl font-semibold text-gray-900">-</div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-sm text-gray-500">Reasoning Images</div>
+                                    <div id="meta-reasoning-images" class="text-xl font-semibold text-gray-900">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <span class="absolute top-4 right-8 text-white text-4xl cursor-pointer hover:text-gray-300">&times;</span>
+        <img id="modalImage" class="modal-content">
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Dataset Statistics</h3>
+                <button onclick="closeStats()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="stats-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = null;
+        let currentFile = null;
+        let currentIndex = 0;
+        let currentSample = null;
+
+        // Load categories on page load
+        window.onload = function() {
+            loadCategories();
+        };
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const categories = await response.json();
+                
+                const listEl = document.getElementById('categories-list');
+                listEl.innerHTML = '';
+                
+                categories.forEach(cat => {
+                    const card = document.createElement('div');
+                    card.className = 'category-card bg-white border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-indigo-500';
+                    card.onclick = () => selectCategory(cat.name);
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">${cat.icon}</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 text-sm">${cat.name}</div>
+                                    <div class="text-xs text-gray-500">${cat.samples} samples • ${cat.files} files</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function selectCategory(categoryName) {
+            currentCategory = categoryName;
+            
+            try {
+                const response = await fetch(`/api/category/${encodeURIComponent(categoryName)}`);
+                const files = await response.json();
+                
+                if (files.length > 0) {
+                    currentFile = files[0].path;
+                    currentIndex = 0;
+                    loadSample();
+                }
+            } catch (error) {
+                console.error('Error selecting category:', error);
+            }
+        }
+
+        async function loadSample() {
+            if (!currentFile) return;
+            
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('sample-viewer').classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`/api/sample?file=${encodeURIComponent(currentFile)}&index=${currentIndex}`);
+                currentSample = await response.json();
+                
+                // Update navigation
+                document.getElementById('current-index').textContent = currentIndex + 1;
+                document.getElementById('total-samples').textContent = currentSample.total;
+                
+                // Update content
+                document.getElementById('question-text').innerHTML = currentSample.question || 'No question available';
+                document.getElementById('reasoning-text').innerHTML = currentSample.reasoning || 'No reasoning available';
+                document.getElementById('answer-text').innerHTML = currentSample.answer || 'No answer available';
+                
+                // Update images
+                updateImages('problem-images', currentSample.problem_images);
+                updateImages('reasoning-images', currentSample.reasoning_images);
+                
+                // Update metadata
+                document.getElementById('meta-question-length').textContent = currentSample.metadata.question_length;
+                document.getElementById('meta-reasoning-length').textContent = currentSample.metadata.reasoning_length;
+                document.getElementById('meta-answer-length').textContent = currentSample.metadata.answer_length;
+                document.getElementById('meta-problem-images').textContent = currentSample.metadata.problem_image_count;
+                document.getElementById('meta-reasoning-images').textContent = currentSample.metadata.reasoning_image_count;
+                
+            } catch (error) {
+                console.error('Error loading sample:', error);
+            }
+        }
+
+        function updateImages(elementId, images) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            if (!images || images.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No images available</p>';
+                return;
+            }
+            
+            images.forEach(img => {
+                const imgEl = document.createElement('div');
+                imgEl.className = 'relative group cursor-pointer';
+                imgEl.innerHTML = `
+                    <img src="${img.data}" alt="Image ${img.id}" class="w-full h-48 object-contain bg-gray-100 rounded-lg border border-gray-200" onclick="showImageModal(this.src)">
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2 rounded-b-lg">
+                        <span class="text-white text-xs">Image ${img.id}</span>
+                    </div>
+                `;
+                container.appendChild(imgEl);
+            });
+        }
+
+        function showImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        function showTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('tab-active', 'text-gray-900');
+                btn.classList.add('text-gray-500');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('tab-active', 'text-gray-900');
+            document.getElementById(`tab-${tabName}`).classList.remove('text-gray-500');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`content-${tabName}`).classList.add('fade-in');
+        }
+
+        function previousSample() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadSample();
+            }
+        }
+
+        function nextSample() {
+            if (currentSample && currentIndex < currentSample.total - 1) {
+                currentIndex++;
+                loadSample();
+            }
+        }
+
+        function goToSample() {
+            const input = document.getElementById('sample-input');
+            const index = parseInt(input.value) - 1;
+            
+            if (currentSample && index >= 0 && index < currentSample.total) {
+                currentIndex = index;
+                loadSample();
+            }
+        }
+
+        async function loadRandomSample() {
+            try {
+                const response = await fetch('/api/random');
+                const data = await response.json();
+                
+                currentCategory = data.category;
+                currentFile = data.file;
+                currentIndex = data.index;
+                
+                loadSample();
+            } catch (error) {
+                console.error('Error loading random sample:', error);
+            }
+        }
+
+        async function showStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                const content = `
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">${stats.total_categories}</div>
+                            <div class="text-sm text-gray-500">Categories</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">${stats.total_files}</div>
+                            <div class="text-sm text-gray-500">Files</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">${stats.total_samples.toLocaleString()}</div>
+                            <div class="text-sm text-gray-500">Total Samples</div>
+                        </div>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-3">Category Breakdown</h4>
+                    <div class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+                        ${stats.category_breakdown.map(cat => `
+                            <div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                                <span class="text-sm text-gray-700">${cat.name}</span>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm text-gray-500">${cat.samples.toLocaleString()} samples</span>
+                                    <span class="text-sm font-medium text-indigo-600">${cat.percentage}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('stats-content').innerHTML = content;
+                document.getElementById('statsModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function closeStats() {
+            document.getElementById('statsModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
