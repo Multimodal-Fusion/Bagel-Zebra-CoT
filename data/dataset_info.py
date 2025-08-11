@@ -23,5 +23,11 @@ DATASET_INFO = {
             'image_prefix_dir': '/dev/shm/data/Zebra-CoT',  # Base path for relative image paths
             'num_total_samples': 1000,
         },
+        'chess_thinktrace': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/datasets/',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/datasets/chess_thinktrace.jsonl',
+            'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/datasets/chess_thinktrace_images',
+            'num_total_samples': 1000,  # 1000 samples for training
+        },
     },
 }
