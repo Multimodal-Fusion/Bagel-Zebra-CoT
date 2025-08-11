@@ -2,42 +2,73 @@
 # Training script for chess ThinkTrace dataset
 # Interleaved text and image generation with chain-of-thought reasoning
 
-# Environment setup
-export HF_HOME=/home/colligo/ssd/.cache/huggingface
-# export CUDA_VISIBLE_DEVICES=0  # Use single GPU for toy dataset
+########################################################
+# experiment config
+########################################################
+export MAIN_DIR="/home/project/vlm/Bagel-Zebra-CoT"
+DATASET_CONFIG="$MAIN_DIR/data/configs/chess_thinktrace.yaml"
+MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
+EXPERIMENT_NAME="bagel-chess-thinktrace-visualcot-v1"
 
-# Distributed training settings (single node, single GPU for toy dataset)
-NUM_NODES=$WORLD_SIZE
-NODE_RANK=$RANK
-MASTER_ADDR=$MASTER_ADDR
-MASTER_PORT=$MASTER_PORT
-NPROC_PER_NODE=8   # Single GPU for toy dataset
+# training hyperparams
+LEARNING_RATE=2e-5
+MIN_LEARNING_RATE=1e-6
+LR_SCHEDULER="cosine"
 
 
-# Model path - adjust this to your model location
-# MODEL_PATH=/home/colligo/project/vlm/Bagel/hf/Qwen2.5-0.5B-Instruct  # Small model for testing
-# For production, use: MODEL_PATH=/dev/shm/models/BAGEL-7B-MoT
-MODEL_PATH=/home/colligo/project/vlm/Bagel/models/BAGEL-7B-MoT
+# training hyperparams
+WARMUP_STEPS=10
+TOTAL_STEPS=100000
+SAVE_EVERY=1000
+EXPECTED_NUM_TOKENS=20000
+MAX_NUM_TOKENS=30000
+MAX_NUM_TOKENS_PER_SAMPLE=20000
+PREFER_BUFFER_BEFORE=20000
 
-# Create results directories
-mkdir -p results/chess_thinktrace
-mkdir -p results/checkpoints/chess_thinktrace
+# logging hyperparams
+LOG_EVERY=1
 
-echo "=========================================="
-echo "Training Chess ThinkTrace Dataset"
-echo "=========================================="
-echo "Model: $MODEL_PATH"
-echo "Dataset config: ./data/configs/chess_thinktrace.yaml"
-echo "GPUs: $NPROC_PER_NODE"
-echo "Output: results/chess_thinktrace"
-echo "NUM_NODES: $NUM_NODES"
-echo "NODE_RANK: $NODE_RANK"
-echo "MASTER_ADDR: $MASTER_ADDR"
-echo "MASTER_PORT: $MASTER_PORT"
-echo "NPROC_PER_NODE: $NPROC_PER_NODE"
-echo "=========================================="
+# resume training hyperparams
+AUTO_RESUME=True
+RESUME_MODEL_ONLY=True
+FINETUNE_FROM_EMA=False
+########################################################
+# set the variables
+########################################################
+export num_nodes=${WORLD_SIZE:-1}
+export node_rank=${RANK:-0}
+export master_addr=${MASTER_ADDR:-"localhost"}
+export master_port=${MASTER_PORT:-"29500"}
+export model_path=$MODEL_PATH
+export WANDB_ENTITY="genai-x"
 
-# Launch training
+# add main directory to python path
+export PYTHONPATH="$MAIN_DIR:$PYTHONPATH"
+
+########################################################
+# print the variables
+########################################################
+echo "================================================"
+echo "🧩 Visual Jigsaw Generation Training"
+echo "================================================"
+echo "Dataset: Visual Jigsaw Generation (160k samples)"
+echo "Task: Puzzle → Original Image Reconstruction"
+echo "Model: BAGEL-7B-MoT"
+echo "================================================"
+echo "num_nodes: $num_nodes"
+echo "node_rank: $node_rank" 
+echo "master_addr: $master_addr"
+echo "master_port: $master_port"
+echo "model_path: $model_path"
+echo "WANDB_ENTITY: $WANDB_ENTITY"
+echo "DATASET_CONFIG: $DATASET_CONFIG"
+echo "EXPERIMENT_NAME: $EXPERIMENT_NAME"
+echo "================================================"
+
+
+########################################################
+# run the experiment
+########################################################
 torchrun \
   --nnodes=$NUM_NODES \
   --node_rank=$NODE_RANK \
@@ -45,39 +76,38 @@ torchrun \
   --master_addr=$MASTER_ADDR \
   --master_port=$MASTER_PORT \
   train/pretrain_unified_navit.py \
-  --dataset_config_file ./data/configs/chess_thinktrace.yaml \
+  --dataset_config_file $DATASET_CONFIG \
   --model_path $MODEL_PATH \
   --layer_module Qwen2DecoderLayer \
   --max_latent_size 32 \
   --resume-from $MODEL_PATH \
   --finetune_from_hf True \
-  --auto_resume False \
-  --resume-model-only True \
-  --finetune-from-ema False \
-  --log_every 1 \
-  --lr 1e-5 \
-  --lr_scheduler cosine \
-  --min_lr 1e-6 \
+  --auto_resume $AUTO_RESUME \
+  --resume-model-only $RESUME_MODEL_ONLY \
+  --finetune-from-ema $FINETUNE_FROM_EMA \
+  --log_every $LOG_EVERY \
+  --lr $LEARNING_RATE \
+  --lr_scheduler $LR_SCHEDULER \
+  --min_lr $MIN_LEARNING_RATE \
   --num_worker 1 \
-  --expected_num_tokens 20000 \
-  --max_num_tokens 30000 \
-  --max_num_tokens_per_sample 20000 \
-  --prefer_buffer_before 20000 \
+  --expected_num_tokens $EXPECTED_NUM_TOKENS \
+  --max_num_tokens $MAX_NUM_TOKENS \
+  --max_num_tokens_per_sample $MAX_NUM_TOKENS_PER_SAMPLE \
+  --prefer_buffer_before $PREFER_BUFFER_BEFORE \
   --num_shard=$NPROC_PER_NODE \
   --sharding_strategy="HYBRID_SHARD" \
-  --wandb_project "chess-thinktrace" \
-  --wandb_name "chess-thinktrace-$(date +%Y%m%d_%H%M%S)" \
-  --save_every 50 \
-  --warmup_steps 10 \
-  --total_steps 100 \
-  --results_dir results/chess_thinktrace/ \
-  --checkpoint_dir results/checkpoints/chess_thinktrace/ \
+  --save_every $SAVE_EVERY \
+  --warmup_steps $WARMUP_STEPS \
+  --total_steps $TOTAL_STEPS \
+  --wandb_name $EXPERIMENT_NAME \
+  --checkpoint_dir "results/$EXPERIMENT_NAME/checkpoints" \
+  --results_dir "results/$EXPERIMENT_NAME" \
   --text_cond_dropout_prob 0.1 \
   --vae_cond_dropout_prob 0.1 \
-  --vit_cond_dropout_prob 0.4
+  --save_every $SAVE_EVERY
 
 echo "=========================================="
-echo "Training completed!"
-echo "Check results in: results/chess_thinktrace/"
-echo "Checkpoints saved in: results/checkpoints/chess_thinktrace/"
+echo "🎉 Training completed!"
+echo "Check results in: results/$EXPERIMENT_NAME/"
+echo "Checkpoints saved in: results/$EXPERIMENT_NAME/checkpoints/"
 echo "=========================================="

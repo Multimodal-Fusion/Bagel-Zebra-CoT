@@ -14,7 +14,6 @@ DATASET_REGISTRY = {
     'think_trace': ThinkTraceJSONLIterableDataset,
 }
 
-
 DATASET_INFO = {
     'think_trace': {
         'think_trace_dataset': {
