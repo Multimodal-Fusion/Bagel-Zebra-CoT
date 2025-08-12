@@ -189,6 +189,29 @@ HTML_TEMPLATE = """
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        .trace-selector {
+            background: #f0f8ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #cce7ff;
+        }
+        .trace-type-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        .no-trace-message {
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +227,14 @@ HTML_TEMPLATE = """
                 <button type="button" class="btn btn-outline-primary" id="richViewBtn" onclick="setViewMode('rich')">Rich View</button>
                 <button type="button" class="btn btn-outline-primary" id="plainViewBtn" onclick="setViewMode('plain')">Plain View</button>
             </div>
+        </div>
+        
+        <div class="trace-selector" id="traceSelectorContainer" style="display: none;">
+            <label for="traceTypeSelect" class="form-label">Select Reasoning Trace Type:</label>
+            <select id="traceTypeSelect" class="form-select" onchange="changeTraceType()">
+                <!-- Options will be populated dynamically -->
+            </select>
+            <small class="text-muted d-block mt-2">Available trace types for this sample</small>
         </div>
 
         <div class="navigation-controls">
@@ -239,6 +270,8 @@ HTML_TEMPLATE = """
         let currentIndex = 0;
         const totalSamples = {{ total_samples }};
         let viewMode = 'rich';  // 'rich' or 'plain'
+        let currentTraceType = null;
+        let availableTraces = [];
 
         function navigate(direction) {
             currentIndex = Math.max(0, Math.min(totalSamples - 1, currentIndex + direction));
@@ -280,8 +313,13 @@ HTML_TEMPLATE = """
                 </div>
             `;
 
-            // Fetch sample data with view mode
-            fetch(`/sample/${currentIndex}?view=${viewMode}`)
+            // Fetch sample data with view mode and trace type
+            let url = `/sample/${currentIndex}?view=${viewMode}`;
+            if (currentTraceType) {
+                url += `&trace_type=${currentTraceType}`;
+            }
+            
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -289,6 +327,11 @@ HTML_TEMPLATE = """
                             <div class="error-message">${data.error}</div>
                         `;
                     } else {
+                        // Update available traces and selector
+                        if (data.available_traces) {
+                            updateTraceSelector(data.available_traces, data.current_trace_type);
+                        }
+                        
                         if (viewMode === 'plain') {
                             displayPlainSample(data);
                         } else {
@@ -339,13 +382,46 @@ HTML_TEMPLATE = """
             document.getElementById('sampleContent').innerHTML = html;
         }
 
+        function updateTraceSelector(traces, currentType) {
+            availableTraces = traces;
+            currentTraceType = currentType;
+            
+            const container = document.getElementById('traceSelectorContainer');
+            const select = document.getElementById('traceTypeSelect');
+            
+            if (traces && traces.length > 0) {
+                container.style.display = 'block';
+                
+                // Clear and populate options
+                select.innerHTML = '';
+                traces.forEach(trace => {
+                    const option = document.createElement('option');
+                    option.value = trace.type;
+                    option.textContent = trace.label;
+                    if (trace.type === currentType) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            } else {
+                container.style.display = 'none';
+            }
+        }
+        
+        function changeTraceType() {
+            const select = document.getElementById('traceTypeSelect');
+            currentTraceType = select.value;
+            loadSample();
+        }
+        
         function displaySample(data) {
             let html = '<div class="sample-card">';
             
-            // Sample info
+            // Sample info with trace type badge
             html += `<div class="sample-info">
                         <strong>Sample Index:</strong> ${currentIndex} | 
                         <strong>Final Answer:</strong> ${data.final_answer}
+                        ${data.trace_type_label ? `<span class="trace-type-badge">${data.trace_type_label}</span>` : ''}
                      </div>`;
 
             // Question
@@ -364,8 +440,11 @@ HTML_TEMPLATE = """
                 html += '<div id="thoughtsContainer">';
                 
                 data.thoughts.forEach((thought, index) => {
+                    // Determine label based on thought text
+                    let label = thought.text.startsWith('Step ') ? '' : `<strong>THOUGHT ${index}:</strong><br>`;
+                    
                     html += `<div class="thought-section">
-                                <strong>THOUGHT ${index}:</strong><br>
+                                ${label}
                                 ${thought.text}
                              </div>`;
                     
@@ -377,6 +456,10 @@ HTML_TEMPLATE = """
                 });
                 
                 html += '</div>';
+            } else if (data.no_trace) {
+                html += `<div class="no-trace-message">
+                            ${data.no_trace_message || 'No reasoning trace available for this sample'}
+                         </div>`;
             }
 
             // Final answer
@@ -472,15 +555,22 @@ def parse_thinking_trace(trace_text):
     lines = trace_text.split('\n')
     
     for line in lines:
-        if line.startswith('THOUGHT'):
+        # Handle both THOUGHT format (chess) and Step format (FrozenLake)
+        if line.startswith('THOUGHT') or line.startswith('Step '):
             if current_thought:
                 thoughts.append(current_thought)
             
-            # Extract thought number and text
-            parts = line.split(':', 1)
-            if len(parts) > 1:
+            # Extract thought/step number and text
+            if line.startswith('THOUGHT'):
+                parts = line.split(':', 1)
+                if len(parts) > 1:
+                    current_thought = {
+                        'text': parts[1].strip(),
+                        'image': None
+                    }
+            else:  # Step format
                 current_thought = {
-                    'text': parts[1].strip(),
+                    'text': line,
                     'image': None
                 }
         elif current_thought and line.strip() and not line.startswith('<image_'):
@@ -496,6 +586,25 @@ def parse_thinking_trace(trace_text):
         thoughts.append(current_thought)
     
     return thoughts
+
+def get_available_traces(sample):
+    """Get all available reasoning trace types in a sample."""
+    trace_types = []
+    
+    # Check for different trace formats
+    if 'Text Reasoning Trace' in sample and sample['Text Reasoning Trace']:
+        trace_types.append(('original', 'Original'))
+    
+    if 'Text Reasoning Trace[sft]' in sample and sample['Text Reasoning Trace[sft]']:
+        trace_types.append(('sft', 'SFT'))
+    
+    if 'Text Reasoning Trace[textual-cot]' in sample and sample['Text Reasoning Trace[textual-cot]']:
+        trace_types.append(('textual-cot', 'Textual CoT'))
+    
+    if 'Text Reasoning Trace[visual-cot]' in sample and sample['Text Reasoning Trace[visual-cot]']:
+        trace_types.append(('visual-cot', 'Visual CoT'))
+    
+    return trace_types
 
 @app.route('/')
 def index():
@@ -513,6 +622,38 @@ def get_sample(index):
     try:
         sample = samples[index]
         view_mode = request.args.get('view', 'rich')
+        requested_trace_type = request.args.get('trace_type', None)
+        
+        # Get available trace types
+        available_traces = get_available_traces(sample)
+        
+        # Determine which trace to use
+        trace_type = None
+        trace_text = None
+        trace_type_label = None
+        
+        if requested_trace_type:
+            # Use requested trace type if available
+            for key, label in available_traces:
+                if key == requested_trace_type:
+                    trace_type = key
+                    trace_type_label = label
+                    break
+        
+        if not trace_type and available_traces:
+            # Default to first available trace
+            trace_type, trace_type_label = available_traces[0]
+        
+        # Get the trace text based on selected type
+        if trace_type:
+            if trace_type == 'original':
+                trace_text = sample.get('Text Reasoning Trace', '')
+            elif trace_type == 'sft':
+                trace_text = sample.get('Text Reasoning Trace[sft]', '')
+            elif trace_type == 'textual-cot':
+                trace_text = sample.get('Text Reasoning Trace[textual-cot]', '')
+            elif trace_type == 'visual-cot':
+                trace_text = sample.get('Text Reasoning Trace[visual-cot]', '')
         
         if view_mode == 'plain':
             # Build plain sequence showing exact text and image markers
@@ -565,9 +706,9 @@ def get_sample(index):
                 plain_sequence.append({'type': 'text', 'content': '\n'})
             
             # Add the text reasoning trace with image markers
-            trace = sample.get('Text Reasoning Trace', '')
-            if trace:
-                plain_sequence.extend(process_text_with_images(trace, "Text Reasoning Trace: "))
+            if trace_text:
+                trace_prefix = f"Text Reasoning Trace [{trace_type_label}]: " if trace_type_label else "Text Reasoning Trace: "
+                plain_sequence.extend(process_text_with_images(trace_text, trace_prefix))
                 plain_sequence.append({'type': 'text', 'content': '\n'})
             
             # Add final answer
@@ -576,13 +717,16 @@ def get_sample(index):
                 plain_sequence.append({'type': 'text', 'content': f"\nFinal Answer: {final_answer}"})
             
             return jsonify({
-                'plain_sequence': plain_sequence
+                'plain_sequence': plain_sequence,
+                'available_traces': [{'type': t, 'label': l} for t, l in available_traces],
+                'current_trace_type': trace_type,
+                'trace_type_label': trace_type_label
             })
         
         else:
             # Rich view (original implementation)
             # Parse the thinking trace
-            thoughts = parse_thinking_trace(sample.get('Text Reasoning Trace', ''))
+            thoughts = parse_thinking_trace(trace_text) if trace_text else []
             
             # Load images for thoughts
             for i, thought in enumerate(thoughts):
@@ -598,11 +742,27 @@ def get_sample(index):
             if 'problem_image_1' in sample:
                 problem_image = load_image_as_base64(sample['problem_image_1'])
             
+            # Check if no trace is available or trace is empty
+            no_trace = not trace_text or trace_text.strip() == ''
+            no_trace_message = None
+            if no_trace:
+                if trace_type == 'sft':
+                    no_trace_message = 'SFT trace is empty (direct answer without reasoning)'
+                elif not available_traces:
+                    no_trace_message = 'No reasoning trace available for this sample'
+                else:
+                    no_trace_message = f'{trace_type_label} trace is empty'
+            
             return jsonify({
                 'question': sample.get('Question', ''),
                 'thoughts': thoughts,
                 'final_answer': sample.get('Final Answer', ''),
-                'problem_image': problem_image
+                'problem_image': problem_image,
+                'available_traces': [{'type': t, 'label': l} for t, l in available_traces],
+                'current_trace_type': trace_type,
+                'trace_type_label': trace_type_label,
+                'no_trace': no_trace,
+                'no_trace_message': no_trace_message
             })
     
     except Exception as e:
