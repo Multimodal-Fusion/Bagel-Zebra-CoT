@@ -29,9 +29,9 @@ DATASET_INFO = {
             'num_total_samples': 1000,  # 1000 samples for training
         },
         'frozenlake_thinktrace': {
-            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/frozenlake/test/',
-            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/frozenlake/test/frozenlake_thinktrace.jsonl',
-            'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/frozenlake/test/',
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
+            'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
             'num_total_samples': None,  # Use all samples
         },
     },

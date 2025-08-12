@@ -591,17 +591,17 @@ def get_available_traces(sample):
     """Get all available reasoning trace types in a sample."""
     trace_types = []
     
-    # Check for different trace formats
-    if 'Text Reasoning Trace' in sample and sample['Text Reasoning Trace']:
+    # Check for different trace formats - include even if empty
+    if 'Text Reasoning Trace' in sample:
         trace_types.append(('original', 'Original'))
     
-    if 'Text Reasoning Trace[sft]' in sample and sample['Text Reasoning Trace[sft]']:
+    if 'Text Reasoning Trace[sft]' in sample:
         trace_types.append(('sft', 'SFT'))
     
-    if 'Text Reasoning Trace[textual-cot]' in sample and sample['Text Reasoning Trace[textual-cot]']:
+    if 'Text Reasoning Trace[textual-cot]' in sample:
         trace_types.append(('textual-cot', 'Textual CoT'))
     
-    if 'Text Reasoning Trace[visual-cot]' in sample and sample['Text Reasoning Trace[visual-cot]']:
+    if 'Text Reasoning Trace[visual-cot]' in sample:
         trace_types.append(('visual-cot', 'Visual CoT'))
     
     return trace_types
