@@ -31,6 +31,7 @@ LR_SCHEDULER="cosine"
 WARMUP_STEPS=100
 TOTAL_STEPS=500
 SAVE_EVERY=100
+MAX_CHECKPOINTS=3 # default is 3
 EXPECTED_NUM_TOKENS=20000
 MAX_NUM_TOKENS=30000
 MAX_NUM_TOKENS_PER_SAMPLE=20000
@@ -105,6 +106,7 @@ torchrun \
   --num_shard=$NPROC_PER_NODE \
   --sharding_strategy="HYBRID_SHARD" \
   --save_every $SAVE_EVERY \
+  --max_checkpoints $MAX_CHECKPOINTS \
   --warmup_steps $WARMUP_STEPS \
   --total_steps $TOTAL_STEPS \
   --wandb_name $EXPERIMENT_NAME \

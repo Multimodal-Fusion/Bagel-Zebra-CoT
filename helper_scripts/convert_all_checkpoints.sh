@@ -3,30 +3,45 @@
 # Enhanced checkpoint conversion script with parallel processing and weight merging
 # 
 # Usage:
-#   ./convert_all_checkpoints.sh [REPLACE] [MAX_PARALLEL] [NO_MERGE_WEIGHTS]
+#   ./convert_all_checkpoints.sh BASE_PATH [REPLACE] [MAX_PARALLEL] [NO_MERGE_WEIGHTS]
 #
 # Arguments:
-#   REPLACE (default: false)        - Replace existing _hf directories if they exist
-#   MAX_PARALLEL (default: 4)       - Maximum number of parallel conversions
+#   BASE_PATH (required)             - Path to checkpoint directory (e.g., ./results/EXPNAME/checkpoints)
+#   REPLACE (default: false)         - Replace existing _hf directories if they exist
+#   MAX_PARALLEL (default: 8)        - Maximum number of parallel conversions
 #   NO_MERGE_WEIGHTS (default: false) - Disable merging missing generation weights
 #
 # Examples:
-#   ./convert_all_checkpoints.sh                    # Default: merge weights, don't replace, 4 parallel
-#   ./convert_all_checkpoints.sh true               # Replace existing, merge weights
-#   ./convert_all_checkpoints.sh true 8             # Replace, 8 parallel processes
-#   ./convert_all_checkpoints.sh false 4 true       # Don't replace, old behavior (no weight merging)
+#   ./convert_all_checkpoints.sh ./results/EXPNAME/checkpoints                    # Default: merge weights, don't replace, 8 parallel
+#   ./convert_all_checkpoints.sh ./results/EXPNAME/checkpoints true               # Replace existing, merge weights
+#   ./convert_all_checkpoints.sh ./results/EXPNAME/checkpoints true 8             # Replace, 8 parallel processes
+#   ./convert_all_checkpoints.sh ./results/EXPNAME/checkpoints false 4 true       # Don't replace, old behavior (no weight merging)
 #
 # Configuration
 BASE_MODEL="/home/colligo/project/vlm/Bagel-Zebra-CoT/models/BAGEL-7B-MoT"  # Base model for weight merging
 
-# Example checkpoint paths - update BASE_PATH to your specific checkpoint directory
-# BASE_PATH="./results/bagel-chess-thinktrace-visualcot-v1/checkpoints"
-BASE_PATH="./results/bagel-chess-thinktrace-visualcot-v1/checkpoints"
+# Check if base path argument is provided
+if [ $# -lt 1 ]; then
+    echo "Error: BASE_PATH is required as the first argument"
+    echo ""
+    echo "Usage: $0 BASE_PATH [REPLACE] [MAX_PARALLEL] [NO_MERGE_WEIGHTS]"
+    echo ""
+    echo "Example:"
+    echo "  $0 ./results/bagel-chess-thinktrace-visualcot-v1/checkpoints"
+    exit 1
+fi
 
 # Parse arguments
-REPLACE=${1:-false}           # Default to false, can override with: ./script.sh true
-MAX_PARALLEL=${2:-8}          # Maximum parallel conversions, default 4
-NO_MERGE_WEIGHTS=${3:-false}  # Default to false (merge weights), set true to disable merging
+BASE_PATH="$1"                # Required: path to checkpoint directory
+REPLACE=${2:-false}           # Default to false, can override with: ./script.sh path true
+MAX_PARALLEL=${3:-8}          # Maximum parallel conversions, default 8
+NO_MERGE_WEIGHTS=${4:-false}  # Default to false (merge weights), set true to disable merging
+
+# Validate base path exists
+if [ ! -d "$BASE_PATH" ]; then
+    echo "Error: The specified path does not exist: $BASE_PATH"
+    exit 1
+fi
 
 # Dynamically find all checkpoint directories (only pure numeric directories)
 CHECKPOINTS=()
@@ -40,10 +55,22 @@ for dir in "$BASE_PATH"/*; do
     fi
 done
 
+# Check if any checkpoints were found
+if [ ${#CHECKPOINTS[@]} -eq 0 ]; then
+    echo "Error: No checkpoint directories found in: $BASE_PATH"
+    echo ""
+    echo "Expected to find directories with numeric names (e.g., 0000500, 0001000)"
+    echo ""
+    echo "Contents of $BASE_PATH:"
+    ls -la "$BASE_PATH" 2>/dev/null | head -20
+    exit 1
+fi
+
 # Sort checkpoints numerically
 IFS=$'\n' CHECKPOINTS=($(sort -n <<<"${CHECKPOINTS[*]}"))
 unset IFS
 
+echo "Found ${#CHECKPOINTS[@]} checkpoints in: $BASE_PATH"
 echo "Converting checkpoints: ${CHECKPOINTS[*]}"
 echo "Base model for merging: $BASE_MODEL"
 echo "Replace existing: $REPLACE"

@@ -228,6 +228,10 @@ class TrainingArguments:
         default=2000,
         metadata={"help": "Save a checkpoint every N training steps."}
     )
+    max_checkpoints: int = field(
+        default=3,
+        metadata={"help": "Maximum number of checkpoints to keep. Older checkpoints will be deleted."}
+    )
     total_steps: int = field(
         default=20000,
         metadata={"help": "Total number of optimizer steps to train for."}
@@ -698,7 +702,7 @@ def main():
                 data_status=gather_list
             )
 
-            # Delete old checkpoints (keep at most 3)
+            # Delete old checkpoints (keep at most max_checkpoints)
             if dist.get_rank() == 0:
                 try:
                     # Get all checkpoint directories
@@ -708,8 +712,8 @@ def main():
                     checkpoint_dirs.sort()  # Sort by step number (oldest first)
                     logger.info(f"Sorted checkpoint directories: {checkpoint_dirs}")
                     
-                    # Keep at most 3 checkpoints, delete the oldest ones
-                    while len(checkpoint_dirs) > 3:
+                    # Keep at most max_checkpoints, delete the oldest ones
+                    while len(checkpoint_dirs) > training_args.max_checkpoints:
                         oldest_checkpoint = checkpoint_dirs.pop(0)  # Remove oldest from list
                         old_path = os.path.join(training_args.checkpoint_dir, oldest_checkpoint)
                         shutil.rmtree(old_path)
