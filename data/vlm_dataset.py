@@ -23,17 +23,22 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
         jsonl_path_list, data_dir_list, num_used_data, 
         local_rank=0, world_size=1, num_workers=8, data_status=None, 
         shuffle_lines=False, shuffle_seed=0,
+        use_thinktrace=False, trace_field='Text Reasoning Trace',
     ):
         """
         jsonl_path_list: list of jsonl file paths
         data_dir_list: list of image directories containing the images of each jsonl file
         num_used_data: list of number of sampled data points for each jsonl
+        use_thinktrace: whether to convert thinktrace format to conversation format
+        trace_field: field name containing the reasoning trace (e.g., 'Text Reasoning Trace[textual-cot]')
         """
         super().__init__(dataset_name, local_rank, world_size, num_workers)
         self.transform = transform
         self.tokenizer = tokenizer
         self.frame_sampler = frame_sampler
         self.data_status = data_status
+        self.use_thinktrace = use_thinktrace
+        self.trace_field = trace_field
         self.data_paths = self.get_data_paths(
             jsonl_path_list, 
             data_dir_list, 
@@ -63,6 +68,41 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
             raw_data = raw_data[:num_data_point]
             data_paths.extend([(json_data, image_dir) for json_data in raw_data])
         return data_paths
+
+    def convert_thinktrace_to_conversations(self, data_item):
+        """Convert thinktrace format to conversation format"""
+        # Extract fields
+        prompt = "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and generate visual aids to enhance your problem-solving. You should first think about the reasoning and planning process in the mind before generating visual aids. Wrap your text reasoning with <think></think> tokens, and wrap your final conclusion with <answer></answer> tokens. Provide your final conclusion clearly in the format of '<answer>Final Answer: <answer here></answer>'"
+        
+        question = data_item.get('Question', '')
+        reasoning_trace = data_item.get(self.trace_field, '')
+        final_answer = data_item.get('Final Answer', '')
+        
+        # Format the assistant response with template
+        assistant_response = ""
+        if reasoning_trace:
+            assistant_response = f"<think>{reasoning_trace}</think>\n"
+        assistant_response += f"The final answer is {final_answer}\n"
+        assistant_response += f"<ANSWER>{final_answer}</ANSWER>"
+        
+        # Convert to conversation format
+        conversations = [
+            {'from': 'human', 'value': prompt + '\n' + 'Question: ' + question},
+            {'from': 'gpt', 'value': assistant_response}
+        ]
+        
+        # Handle images in question if present
+        if 'problem_image_1' in data_item:
+            # Extract image path from the data_item
+            data_item['image'] = [data_item['problem_image_1']]
+            # Replace image reference in question with <image> tag
+            import re
+            question_text = conversations[0]['value']
+            question_text = re.sub(r'<image_start>\[problem_image_1\]<image_end>', '<image>', question_text)
+            conversations[0]['value'] = question_text
+        
+        data_item['conversations'] = conversations
+        return data_item
 
     def change_format(self, data, num_images):
         elements = []
@@ -116,6 +156,11 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
 
                 try:
                     data_item = json.loads(data)
+                    
+                    # Convert thinktrace format if enabled
+                    if self.use_thinktrace:
+                        data_item = self.convert_thinktrace_to_conversations(data_item)
+                    
                     raw_images = None
                     if 'image' in data_item:
                         if type(data_item['image']) == list:

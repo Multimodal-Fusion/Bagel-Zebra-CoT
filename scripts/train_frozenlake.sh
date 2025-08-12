@@ -10,9 +10,17 @@ export MAIN_DIR="$HOME/project/vlm/Bagel-Zebra-CoT"
 
 # Select which trace type to use (passed as argument or default to visual-cot)
 TRACE_TYPE=${1:-"visual-cot"}  # Options: sft, textual-cot, visual-cot
+# assert that TRACE_TYPE is one of the following
+ALLOWED_TRACE_TYPES=("sft" "textual-cot" "visual-cot")
+if ! [[ " ${ALLOWED_TRACE_TYPES[@]} " =~ " ${TRACE_TYPE} " ]]; then
+    echo "Invalid trace type: $TRACE_TYPE"
+    echo "Allowed trace types: ${ALLOWED_TRACE_TYPES[@]}"
+    exit 1
+fi
+
 DATASET_CONFIG="$MAIN_DIR/data/configs/frozenlake/${TRACE_TYPE}.yaml"
 MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
-EXPERIMENT_NAME="bagel-frozenlake-thinktrace-256dim-${TRACE_TYPE}-v1"
+EXPERIMENT_NAME="bagel-frozenlake-512dim-${TRACE_TYPE}-v1"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
@@ -75,6 +83,8 @@ echo "model_path: $MODEL_PATH"
 echo "WANDB_ENTITY: $WANDB_ENTITY"
 echo "DATASET_CONFIG: $DATASET_CONFIG"
 echo "EXPERIMENT_NAME: $EXPERIMENT_NAME"
+echo "VISUAL_GEN: $VISUAL_GEN"
+echo "VISUAL_UND: $VISUAL_UND"
 echo "================================================"
 
 
