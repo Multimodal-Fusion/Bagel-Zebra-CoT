@@ -12,7 +12,7 @@ export MAIN_DIR="$HOME/project/vlm/Bagel-Zebra-CoT"
 TRACE_TYPE=${1:-"visual-cot"}  # Options: sft, textual-cot, visual-cot
 DATASET_CONFIG="$MAIN_DIR/data/configs/frozenlake/${TRACE_TYPE}.yaml"
 MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
-EXPERIMENT_NAME="bagel-frozenlake-thinktrace-${TRACE_TYPE}-v1"
+EXPERIMENT_NAME="bagel-frozenlake-thinktrace-256dim-${TRACE_TYPE}-v1"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
@@ -21,6 +21,11 @@ echo "================================================"
 # modality params
 VISUAL_GEN=true
 VISUAL_UND=true
+
+# if trace type is not visual-cot, set visual_gen to False
+if [ "$TRACE_TYPE" != "visual-cot" ]; then
+    VISUAL_GEN=false
+fi
 
 # training hyperparams
 LEARNING_RATE=2e-5
@@ -33,7 +38,7 @@ TOTAL_STEPS=500
 SAVE_EVERY=100
 MAX_CHECKPOINTS=3 # default is 3
 EXPECTED_NUM_TOKENS=20000
-MAX_NUM_TOKENS=30000
+MAX_NUM_TOKENS=25000
 MAX_NUM_TOKENS_PER_SAMPLE=20000
 PREFER_BUFFER_BEFORE=20000
 NUM_WORKER=1
@@ -42,9 +47,9 @@ NUM_WORKER=1
 LOG_EVERY=10
 
 # resume training hyperparams
-AUTO_RESUME=false
+AUTO_RESUME=true
 RESUME_MODEL_ONLY=true
-FINETUNE_FROM_EMA=false
+FINETUNE_FROM_EMA=true
 ########################################################
 # set the variables
 ########################################################

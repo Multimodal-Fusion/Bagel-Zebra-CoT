@@ -1,0 +1,23 @@
+{
+  "timestamp": "20250811_210900",
+  "sample_index": 0,
+  "checkpoint_dir": "./results/bagel-frozenlake-thinktrace-256dim-visual-cot-v1/checkpoints/0000200_hf",
+  "dataset_path": "/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl",
+  "prompt": "Look at the FrozenLake grid above. The agent starts at S and needs to reach G (goal) while avoiding H (holes). What is the optimal sequence of moves?\nOptions:\nA) Right, Down, Down, Down, Right, Right\nB) Right, Down, Down, Right, Right, Right\nC) Down, Left, Up, Left, Left, Right\nD) Down, Down, Up, Left, Left, Left\nPlease provide your answer in <ANSWER> tags. e.g., <ANSWER>A</ANSWER> or <ANSWER>B</ANSWER> or <ANSWER>C</ANSWER> or <ANSWER>D</ANSWER>.",
+  "system_prompt": "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and use visual aids to enhance your problem-solving. Provide your final conclusion clearly in the format of \"Final Answer: <answer here>\"",
+  "problem_image_paths": [
+    "images/problem_image.png"
+  ],
+  "expected_answer": "A",
+  "model_answer": "A",
+  "answer_correct": true,
+  "response": [
+    {
+      "step": 1,
+      "text": "<ANSWER>A</ANSWER>",
+      "image_path": null
+    }
+  ],
+  "total_steps": 1,
+  "total_images": 0
+}

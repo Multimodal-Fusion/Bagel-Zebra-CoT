@@ -124,7 +124,7 @@ def main():
     llm_config = Qwen2Config.from_json_file(os.path.join(checkpoint_dir, "llm_config.json"))
     llm_config.qk_norm = True
     llm_config.tie_word_embeddings = False
-    llm_config.layer_module = "Qwen2DecoderLayer"
+    llm_config.layer_module = "Qwen2MoTDecoderLayer"
     
     # ViT config preparing (use base model configs)
     vit_config = SiglipVisionConfig.from_json_file(os.path.join(checkpoint_dir, "vit_config.json"))
@@ -144,7 +144,7 @@ def main():
         vit_max_num_patch_per_side=70,
         connector_act='gelu_pytorch_tanh',
         latent_patch_size=2,
-        max_latent_size=32,
+        max_latent_size=64,
     )
     
     # Create model with empty weights
@@ -159,9 +159,11 @@ def main():
     tokenizer, new_token_ids, _ = add_special_tokens(tokenizer)
     
     # Image Transform Preparing
-    vae_transform = ImageTransform(1024, 512, 16)
-    vit_transform = ImageTransform(980, 512, 14)
-    
+    # vae_transform = ImageTransform(1024, 512, 16)
+    # vit_transform = ImageTransform(980, 512, 14)
+    vae_transform = ImageTransform(256,256, 16)
+    vit_transform = ImageTransform(256,256, 14)
+
     # Device mapping for available GPUs
     max_mem_per_gpu = "80GiB"
     
@@ -169,7 +171,7 @@ def main():
     device_map = infer_auto_device_map(
         model,
         max_memory={i: max_mem_per_gpu for i in range(torch.cuda.device_count())},
-        no_split_module_classes=["Bagel", "Qwen2DecoderLayer"],
+        no_split_module_classes=["Bagel", "Qwen2MoTDecoderLayer"],
         dtype=torch.bfloat16,
     )
     
