@@ -1,0 +1,21 @@
+think_trace:
+  dataset_names: 
+  - frozenlake_thinktrace
+  num_used_data: 
+  - None  # Use all samples
+  # Specify which trace field to use from the JSONL
+  # Options: 'Text Reasoning Trace[sft]', 'Text Reasoning Trace[textual-cot]', 'Text Reasoning Trace[visual-cot]'
+  trace_field: 'Text Reasoning Trace[visual-cot]'  # Change this to select different trace types
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 256
+    min_image_size: 256
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 256
+    min_image_size: 256
+    max_pixels: 2007040
+  weight: 1.0
+  is_mandatory: true
+  shuffle_lines: true
+  shuffle_seed: 42

@@ -33,6 +33,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
         shuffle_lines=True, 
         shuffle_seed=0,
         image_prefix_dir=None,
+        trace_field='Text Reasoning Trace',
     ):
         """
         Dataset for think-trace style JSONL files with interleaved text and images.
@@ -46,6 +47,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
             data_dir_list: List of base directories (should match jsonl_path_list)
             num_used_data: List of number of samples to use from each JSONL. If a value is None or non-positive, all data from that JSONL will be used.
             image_prefix_dir: Absolute path to prepend to relative image paths
+            trace_field: Name of the field containing the reasoning trace (default: 'Text Reasoning Trace')
             Other args: Standard distributed dataset args
         """
         DistributedIterableDataset.__init__(self, dataset_name, local_rank, world_size, num_workers)
@@ -54,6 +56,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
         self.tokenizer = tokenizer
         self.data_status = data_status
         self.image_prefix_dir = image_prefix_dir or ""
+        self.trace_field = trace_field
         
         self.start_of_image = tokenizer.convert_tokens_to_ids('<|vision_start|>')
         self.end_of_image = tokenizer.convert_tokens_to_ids('<|vision_end|>')
@@ -133,7 +136,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
         prompt = "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and generate visual aids to enhance your problem-solving. You should first think about the reasoning and planning process in the mind before generating visual aids. Wrap your text reasoning with <think></think> tokens, and wrap your final conclusion with <answer></answer> tokens. Provide your final conclusion clearly in the format of '<answer>Final Answer: <answer here></answer>'"
         question = data_item.get('Question', '')
         question = f'Question: {question}'
-        reasoning_trace = data_item.get('Text Reasoning Trace', '')
+        reasoning_trace = data_item.get(self.trace_field, '')
         reasoning_trace = f'{reasoning_trace}'
         final_answer = data_item.get('Final Answer', '')
         final_answer = f'<answer>Final Answer: {final_answer}</answer>'
