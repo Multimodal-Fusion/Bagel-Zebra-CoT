@@ -28,7 +28,7 @@ MIN_LEARNING_RATE=1e-6
 LR_SCHEDULER="cosine"
 
 # training hyperparams
-WARMUP_STEPS=100
+WARMUP_STEPS=50
 TOTAL_STEPS=500
 SAVE_EVERY=100
 MAX_CHECKPOINTS=3 # default is 3
@@ -85,8 +85,8 @@ torchrun \
   train/pretrain_unified_navit.py \
   --dataset_config_file $DATASET_CONFIG \
   --model_path $MODEL_PATH \
-  --layer_module Qwen2DecoderLayer \
-  --max_latent_size 32 \
+  --layer_module Qwen2MoTDecoderLayer \
+  --max_latent_size 64 \
   --resume-from $MODEL_PATH \
   --visual_gen $VISUAL_GEN \
   --visual_und $VISUAL_UND \
@@ -112,9 +112,10 @@ torchrun \
   --wandb_name $EXPERIMENT_NAME \
   --checkpoint_dir "results/$EXPERIMENT_NAME/checkpoints" \
   --results_dir "results/$EXPERIMENT_NAME" \
-  --text_cond_dropout_prob 0.1 \
-  --vae_cond_dropout_prob 0.1 \
   --save_every $SAVE_EVERY
+
+# --text_cond_dropout_prob 0.1 \
+# --vae_cond_dropout_prob 0.1 \
 
 echo "=========================================="
 echo "🎉 Training completed!"
