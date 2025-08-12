@@ -11,8 +11,8 @@ MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
 EXPERIMENT_NAME="bagel-chess-thinktrace-visualcot-v1"
 
 # modality params
-VISUAL_GEN=True
-VISUAL_UND=True
+VISUAL_GEN=true
+VISUAL_UND=true
 
 # training hyperparams
 LEARNING_RATE=2e-5
@@ -21,8 +21,8 @@ LR_SCHEDULER="cosine"
 
 # training hyperparams
 WARMUP_STEPS=10
-TOTAL_STEPS=100000
-SAVE_EVERY=1000
+TOTAL_STEPS=20
+SAVE_EVERY=10
 EXPECTED_NUM_TOKENS=20000
 MAX_NUM_TOKENS=30000
 MAX_NUM_TOKENS_PER_SAMPLE=20000
@@ -33,9 +33,9 @@ NUM_WORKER=1 # use small num_workers since the num_used_data (1000) are not enou
 LOG_EVERY=1
 
 # resume training hyperparams
-AUTO_RESUME=True
-RESUME_MODEL_ONLY=True
-FINETUNE_FROM_EMA=False
+AUTO_RESUME=false
+RESUME_MODEL_ONLY=true
+FINETUNE_FROM_EMA=false
 ########################################################
 # set the variables
 ########################################################
@@ -52,12 +52,6 @@ export PYTHONPATH="$MAIN_DIR:$PYTHONPATH"
 ########################################################
 # print the variables
 ########################################################
-echo "================================================"
-echo "🧩 Visual Jigsaw Generation Training"
-echo "================================================"
-echo "Dataset: Visual Jigsaw Generation (160k samples)"
-echo "Task: Puzzle → Original Image Reconstruction"
-echo "Model: BAGEL-7B-MoT"
 echo "================================================"
 echo "num_nodes: $NUM_NODES"
 echo "node_rank: $NODE_RANK" 
