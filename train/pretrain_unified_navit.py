@@ -36,7 +36,8 @@ from train.fsdp_utils import (
     FSDPCheckpoint, FSDPConfig, grad_checkpoint_check_fn, fsdp_wrapper, 
     fsdp_ema_setup, fsdp_ema_update,
 )
-
+import subprocess
+import threading
 
 @dataclass
 class ModelArguments:
@@ -349,6 +350,10 @@ class TrainingArguments:
     no_save_optimizer_states: bool = field(
         default=False,
         metadata={"help": "Skip saving optimizer states with checkpoints."}
+    )
+    sync_checkpoints: bool = field(
+        default=False,
+        metadata={"help": "Sync checkpoints to S3 using sd sync after saving."}
     )
 
 
@@ -730,6 +735,27 @@ def main():
                         logger.info(f"Deleted old checkpoint folder: {old_path}")
                 except Exception as e:
                     logger.warning(f"Failed to delete old checkpoints: {e}")
+
+            # sync the results folder to s3 using sd sync
+            # sync checkpoints to s3 using sd sync (non-blocking | using threading and subprocess.run)
+            if dist.get_rank() == 0:
+                if training_args.sync_checkpoints:
+                    logger.warning(f"Syncing checkpoints to s3 using sd sync")
+                    def sync_with_logging(path):
+                        result = subprocess.run(
+                            ['bash', '-i', '-c', f'sd sync {path}'],
+                            capture_output=True,
+                            text=True
+                        )
+                        if result.returncode == 0:
+                            logger.info(f"Successfully synced {path} to S3")
+                        else:
+                            logger.warning(f"Failed to sync {path}: {result.stderr}")
+                    sync_thread = threading.Thread(target=sync_with_logging, args=(training_args.checkpoint_dir,))
+                    sync_thread.daemon = True
+                    sync_thread.start()
+                    logger.warning(f"Sync thread started. Continuing training ...")
+
 
     logger.info("Done!")
     if dist.get_rank() == 0:

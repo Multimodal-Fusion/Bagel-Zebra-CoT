@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -il
+# '-i' = interactive, '-l' = login (loads ~/.bash_profile)
 # Training script for FrozenLake ThinkTrace dataset
 # Interleaved text and image generation with chain-of-thought reasoning
 # This script allows switching between different trace types (sft, textual-cot, visual-cot)
@@ -129,7 +130,8 @@ torchrun \
   --checkpoint_dir "results/$EXPERIMENT_NAME/checkpoints" \
   --results_dir "results/$EXPERIMENT_NAME" \
   --save_every $SAVE_EVERY \
-  --no_save_optimizer_states
+  --sync_checkpoints \
+  --no_save_optimizer_states 
 
 #   --save_bf16 \
 # --text_cond_dropout_prob 0.1 \
