@@ -19,3 +19,6 @@ reasoning_output*
 jobs/*
 jobs/
 jobs*
+
+# ignore all core*
+core*
