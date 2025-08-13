@@ -8,7 +8,6 @@ eval_results
 tests
 .DS_Store
 gradio.sh
-models
 bagel_example
 Zebra-CoT
 model_bf16.safetensors
