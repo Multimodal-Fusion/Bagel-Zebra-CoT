@@ -9,12 +9,8 @@ import argparse
 import shutil
 from datetime import datetime
 from copy import deepcopy
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from tqdm import tqdm
-import multiprocessing as mp
-from multiprocessing import Queue, Process
-import time
-import sys
 
 from PIL import Image
 import torch
@@ -294,12 +290,6 @@ def main():
         type=int,
         default=512,
         help="Image dimension (default: 512)"
-    )
-    parser.add_argument(
-        "--num-workers",
-        type=int,
-        default=1,
-        help="Number of GPU workers for parallel evaluation (default: 1, max: 8)"
     )
     
     
