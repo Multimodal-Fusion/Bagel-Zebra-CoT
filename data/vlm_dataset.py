@@ -65,12 +65,18 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
             if shuffle_lines:
                 self.rng.seed(shuffle_seed)
                 self.rng.shuffle(raw_data)
-            raw_data = raw_data[:num_data_point]
+            # Convert 'None' string to None type
+            if num_data_point == 'None':
+                num_data_point = None
+            if num_data_point is not None and int(num_data_point) > 0:
+                raw_data = raw_data[:int(num_data_point)]
             data_paths.extend([(json_data, image_dir) for json_data in raw_data])
         return data_paths
 
     def convert_thinktrace_to_conversations(self, data_item):
         """Convert thinktrace format to conversation format"""
+        import re
+        
         # Extract fields
         prompt = "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and generate visual aids to enhance your problem-solving. You should first think about the reasoning and planning process in the mind before generating visual aids. Wrap your text reasoning with <think></think> tokens, and wrap your final conclusion with <answer></answer> tokens. Provide your final conclusion clearly in the format of '<answer>Final Answer: <answer here></answer>'"
         
@@ -85,24 +91,31 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
         assistant_response += f"The final answer is {final_answer}\n"
         assistant_response += f"<ANSWER>{final_answer}</ANSWER>"
         
-        # Convert to conversation format
-        conversations = [
-            {'from': 'human', 'value': prompt + '\n' + 'Question: ' + question},
-            {'from': 'gpt', 'value': assistant_response}
-        ]
-        
-        # Handle images in question if present
+        # Handle image references in question
+        question_with_image = question
         if 'problem_image_1' in data_item:
-            # Extract image path from the data_item
-            data_item['image'] = [data_item['problem_image_1']]
-            # Replace image reference in question with <image> tag
-            import re
-            question_text = conversations[0]['value']
-            question_text = re.sub(r'<image_start>\[problem_image_1\]<image_end>', '<image>', question_text)
-            conversations[0]['value'] = question_text
+            question_with_image = re.sub(r'<image_start>\[problem_image_1\]<image_end>', '<image>', question)
         
-        data_item['conversations'] = conversations
-        return data_item
+        # Create clean conversation format
+        converted = {
+            'conversations': [
+                {'from': 'human', 'value': prompt + '\n' + 'Question: ' + question_with_image},
+                {'from': 'gpt', 'value': assistant_response}
+            ]
+        }
+        
+        # Add image field if present (as single string, not list)
+        if 'problem_image_1' in data_item:
+            converted['image'] = data_item['problem_image_1']
+        
+        # Add id if present, otherwise generate one
+        if 'id' in data_item:
+            converted['id'] = data_item['id']
+        else:
+            # Simple id generation based on question content
+            converted['id'] = abs(hash(question)) % 1000000
+        
+        return converted
 
     def change_format(self, data, num_images):
         elements = []
@@ -192,6 +205,11 @@ class SftJSONLIterableDataset(DistributedIterableDataset):
                         height, width = image_tensor.shape[1:]
                         num_tokens += width * height // transform_stride ** 2
 
+                # Check if conversations exist before calling change_format
+                if 'conversations' not in data_item:
+                    print(f"Skipping sample - no conversations found in data_item")
+                    continue
+                    
                 elements = self.change_format(data_item, len(image_tensor_list))
 
                 for item in elements:

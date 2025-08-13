@@ -133,13 +133,13 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
             return {}
 
         # Extract the main fields
-        prompt = "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and generate visual aids to enhance your problem-solving. You should first think about the reasoning and planning process in the mind before generating visual aids. Wrap your text reasoning with <think></think> tokens, and wrap your final conclusion with <answer></answer> tokens. Provide your final conclusion clearly in the format of '<answer>Final Answer: <answer here></answer>'"
+        # prompt = "You are an AI reasoning assistant capable of step-by-step interleaved text and visual chain of thought. Think step by step and generate visual aids to enhance your problem-solving. You should first think about the reasoning and planning process in the mind before generating visual aids. Wrap your text reasoning with <think></think> tokens, and wrap your final conclusion with <answer></answer> tokens. Provide your final conclusion clearly in the format of '<answer>Final Answer: <answer here></answer>'"
         question = data_item.get('Question', '')
         question = f'Question: {question}'
         reasoning_trace = data_item.get(self.trace_field, '')
         reasoning_trace = f'{reasoning_trace}'
         final_answer = data_item.get('Final Answer', '')
-        final_answer = f'<answer>Final Answer: {final_answer}</answer>'
+        final_answer_formatted = f'The final answer is {final_answer}\n<ANSWER>{final_answer}</ANSWER>'
 
         if not question or not reasoning_trace or not final_answer:
             return {}
@@ -148,7 +148,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
         data = self._init_data()
 
         # 0. Add prompt
-        data = self._add_text(data, prompt, need_loss=False, enable_cfg=True)
+        # data = self._add_text(data, prompt, need_loss=False, enable_cfg=True)
 
         # 1. Add question (with image parsing)
         question_image_refs = self.extract_image_references(question)
@@ -246,7 +246,7 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
                 )
 
         # 5. Add final answer
-        data = self._add_text(data, final_answer, need_loss=True, enable_cfg=True)
+        data = self._add_text(data, final_answer_formatted, need_loss=True, enable_cfg=True)
 
         return data
 

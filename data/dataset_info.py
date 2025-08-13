@@ -23,9 +23,6 @@ DATASET_INFO = {
         'frozenlake_sft': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
             'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
-            'use_thinktrace': True,
-            'trace_field': 'Text Reasoning Trace[sft]',
-            'num_total_samples': None,  # Use all samples
         },
         # Can add chess_sft, other_task_sft here later
     },
@@ -33,9 +30,6 @@ DATASET_INFO = {
         'frozenlake_textual_cot': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
             'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
-            'use_thinktrace': True,
-            'trace_field': 'Text Reasoning Trace[textual-cot]',
-            'num_total_samples': None,  # Use all samples
         },
         # Can add chess_textual_cot, other_task_textual_cot here later
     },
@@ -44,8 +38,6 @@ DATASET_INFO = {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
             'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
             'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
-            'trace_field': 'Text Reasoning Trace[visual-cot]',
-            'num_total_samples': None,  # Use all samples
         },
         # Can add chess_visual_cot, other_task_visual_cot here later
     },
