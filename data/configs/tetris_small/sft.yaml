@@ -1,6 +1,6 @@
 sft:
   dataset_names: 
-  - frozenlake_sft
+  - tetris_small_sft
   num_used_data:
   - None  # Use all samples
   use_thinktrace: true

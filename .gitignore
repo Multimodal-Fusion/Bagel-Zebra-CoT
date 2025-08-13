@@ -14,3 +14,8 @@ Zebra-CoT
 model_bf16.safetensors
 zebra-cot.tar.gz
 reasoning_output*
+
+# ignore all files in the jobs folder
+jobs/*
+jobs/
+jobs*

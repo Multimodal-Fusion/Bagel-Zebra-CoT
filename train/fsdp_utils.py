@@ -95,6 +95,8 @@ class FSDPCheckpoint:
         data_status,
         logger, 
         fsdp_config,
+        save_bf16=False,
+        save_optimizer_states=True,
     ):
         save_path = os.path.join(ckpt_dir, f"{train_steps:07d}")
         os.makedirs(save_path, exist_ok=True)
@@ -108,6 +110,9 @@ class FSDPCheckpoint:
             ):
                 ema_state_dict = ema_model.state_dict()
                 if dist.get_rank() == 0:
+                    if save_bf16:
+                        ema_state_dict = {k: v.bfloat16() if v.dtype == torch.float32 else v 
+                                          for k, v in ema_state_dict.items()}
                     save_file(ema_state_dict, os.path.join(save_path, "ema.safetensors"))
 
         with FSDP.state_dict_type(
@@ -117,34 +122,39 @@ class FSDPCheckpoint:
         ):
             model_state_dict = model.state_dict()
             if dist.get_rank() == 0:
+                if save_bf16:
+                    model_state_dict = {k: v.bfloat16() if v.dtype == torch.float32 else v 
+                                        for k, v in model_state_dict.items()}
                 save_file(model_state_dict, os.path.join(save_path, "model.safetensors"))
 
-        with FSDP.state_dict_type(model, StateDictType.LOCAL_STATE_DICT):
-            if fsdp_config.sharding_strategy == "FULL_SHARD":
-                shard_index = dist.get_rank()
-                total_shards = dist.get_world_size()
-            elif fsdp_config.sharding_strategy == "HYBRID_SHARD":
-                shard_index = dist.get_rank() % fsdp_config.num_shard
-                total_shards = fsdp_config.num_shard
-            else:
-                raise NotImplementedError
+        if save_optimizer_states:
+            # save optimizer states, scheduler states, and data status
+            with FSDP.state_dict_type(model, StateDictType.LOCAL_STATE_DICT):
+                if fsdp_config.sharding_strategy == "FULL_SHARD":
+                    shard_index = dist.get_rank()
+                    total_shards = dist.get_world_size()
+                elif fsdp_config.sharding_strategy == "HYBRID_SHARD":
+                    shard_index = dist.get_rank() % fsdp_config.num_shard
+                    total_shards = fsdp_config.num_shard
+                else:
+                    raise NotImplementedError
 
-            optimizer_save_path = os.path.join(
-                save_path, f"optimizer.{shard_index:05d}-of-{total_shards:05d}.pt"
-            )
-            if fsdp_config.sharding_strategy == "FULL_SHARD":
-                torch.save(optimizer.state_dict(), optimizer_save_path)
-            elif fsdp_config.sharding_strategy == "HYBRID_SHARD":
-                if dist.get_rank() < fsdp_config.num_shard:
+                optimizer_save_path = os.path.join(
+                    save_path, f"optimizer.{shard_index:05d}-of-{total_shards:05d}.pt"
+                )
+                if fsdp_config.sharding_strategy == "FULL_SHARD":
                     torch.save(optimizer.state_dict(), optimizer_save_path)
-            else:
-                raise NotImplementedError
+                elif fsdp_config.sharding_strategy == "HYBRID_SHARD":
+                    if dist.get_rank() < fsdp_config.num_shard:
+                        torch.save(optimizer.state_dict(), optimizer_save_path)
+                else:
+                    raise NotImplementedError
 
-        if dist.get_rank() == 0 and scheduler is not None:
-            torch.save(scheduler.state_dict(), os.path.join(save_path, "scheduler.pt"))
+            if dist.get_rank() == 0 and scheduler is not None:
+                torch.save(scheduler.state_dict(), os.path.join(save_path, "scheduler.pt"))
 
-        if dist.get_rank() == 0 and data_status is not None:
-            torch.save(data_status, os.path.join(save_path, "data_status.pt"))
+            if dist.get_rank() == 0 and data_status is not None:
+                torch.save(data_status, os.path.join(save_path, "data_status.pt"))
 
         dist.barrier()
         return

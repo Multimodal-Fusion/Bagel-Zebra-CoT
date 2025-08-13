@@ -22,21 +22,47 @@ DATASET_INFO = {
     'sft': {
         'frozenlake_sft': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
-            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/train/frozenlake_thinktrace.jsonl',
+        },
+        'maze_small_sft': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/maze_small/train/maze_small_thinktrace.jsonl',
+        },
+        'tetris_small_sft': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/tetris_small/train/tetris_small_thinktrace.jsonl',
         },
         # Can add chess_sft, other_task_sft here later
     },
     'textual_cot': {
         'frozenlake_textual_cot': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
-            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/train/frozenlake_thinktrace.jsonl',
+        },
+        'maze_small_textual_cot': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/maze_small/train/maze_small_thinktrace.jsonl',
+        },
+        'tetris_small_textual_cot': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/tetris_small/train/tetris_small_thinktrace.jsonl',
         },
         # Can add chess_textual_cot, other_task_textual_cot here later
     },
     'visual_cot': {
         'frozenlake_visual_cot': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
-            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/train/frozenlake_thinktrace.jsonl',
+            'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+        },
+        'maze_small_visual_cot': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/maze_small/train/maze_small_thinktrace.jsonl',
+            'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+        },
+        'tetris_small_visual_cot': {
+            'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/tetris_small/train/tetris_small_thinktrace.jsonl',
             'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
         },
         # Can add chess_visual_cot, other_task_visual_cot here later
@@ -57,7 +83,7 @@ DATASET_INFO = {
         },
         'frozenlake_thinktrace': {
             'data_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
-            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/test/frozenlake_thinktrace.jsonl',
+            'jsonl_path': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data/data/frozenlake/train/frozenlake_thinktrace.jsonl',
             'image_prefix_dir': '/home/colligo/project/vlm/Bagel-Zebra-CoT/visual_data',
             'num_total_samples': None,  # Use all samples
         },

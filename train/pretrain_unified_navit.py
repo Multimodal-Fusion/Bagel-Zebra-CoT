@@ -342,6 +342,14 @@ class TrainingArguments:
         default=False,
         metadata={"help": "Enable FLEX (flash-ext friendly) packing algorithm for sequence data."}
     )
+    save_bf16: bool = field(
+        default=False,
+        metadata={"help": "Save model checkpoints in bfloat16 format."}
+    )
+    no_save_optimizer_states: bool = field(
+        default=False,
+        metadata={"help": "Skip saving optimizer states with checkpoints."}
+    )
 
 
 def main():
@@ -699,7 +707,9 @@ def main():
                 scheduler=scheduler, 
                 logger=logger,
                 fsdp_config=fsdp_config,
-                data_status=gather_list
+                data_status=gather_list,
+                save_bf16=training_args.save_bf16,
+                save_optimizer_states=not training_args.no_save_optimizer_states
             )
 
             # Delete old checkpoints (keep at most max_checkpoints)
