@@ -9,12 +9,8 @@ import argparse
 import shutil
 from datetime import datetime
 from copy import deepcopy
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from tqdm import tqdm
-import multiprocessing as mp
-from multiprocessing import Queue, Process
-import time
-import sys
 
 from PIL import Image
 import torch
@@ -296,10 +292,22 @@ def main():
         help="Image dimension (default: 512)"
     )
     parser.add_argument(
-        "--num-workers",
+        "--start-idx",
         type=int,
-        default=1,
-        help="Number of GPU workers for parallel evaluation (default: 1, max: 8)"
+        default=None,
+        help="Start index for sample range (for parallel evaluation)"
+    )
+    parser.add_argument(
+        "--end-idx",
+        type=int,
+        default=None,
+        help="End index for sample range (for parallel evaluation)"
+    )
+    parser.add_argument(
+        "--worker-id",
+        type=int,
+        default=0,
+        help="Worker ID for parallel evaluation"
     )
     
     
@@ -313,17 +321,22 @@ def main():
     
     # Setup output directory
     output_path = os.path.join(args.output_dir, args.eval_name)
-    if os.path.exists(output_path):
-        if args.replace:
-            shutil.rmtree(output_path)
-            os.makedirs(output_path)
-        else:
-            print(f"Output directory {output_path} already exists. Use --replace to overwrite.")
-            return
-    else:
-        os.makedirs(output_path, exist_ok=True)
     
-    print(f"Output directory: {output_path}")
+    # For parallel workers, don't check/create directory (main script handles it)
+    if args.start_idx is None:
+        if os.path.exists(output_path):
+            if args.replace:
+                shutil.rmtree(output_path)
+                os.makedirs(output_path)
+            else:
+                print(f"Output directory {output_path} already exists. Use --replace to overwrite.")
+                return
+        else:
+            os.makedirs(output_path, exist_ok=True)
+        print(f"Output directory: {output_path}")
+    else:
+        # Worker just ensures directory exists
+        os.makedirs(output_path, exist_ok=True)
     
     # Set random seed
     import random
@@ -339,8 +352,15 @@ def main():
     
     # Load dataset
     print(f"\nLoading dataset from: {args.dataset_path}")
-    samples = load_dataset(args.dataset_path, args.max_samples)
-    print(f"Loaded {len(samples)} samples")
+    all_samples = load_dataset(args.dataset_path, args.max_samples)
+    
+    # Handle sample range for parallel evaluation
+    if args.start_idx is not None and args.end_idx is not None:
+        samples = all_samples[args.start_idx:args.end_idx]
+        print(f"Worker {args.worker_id}: Processing samples {args.start_idx} to {args.end_idx-1} ({len(samples)} samples)")
+    else:
+        samples = all_samples
+        print(f"Loaded {len(samples)} samples")
     
     # Setup model
     model, vae_model, tokenizer, vae_transform, vit_transform, new_token_ids = setup_model(
@@ -384,7 +404,13 @@ def main():
         generated_image_folder = os.path.join(output_path, f"generated_images")
         os.makedirs(generated_image_folder, exist_ok=True)
 
-    for idx, sample in enumerate(tqdm(samples, desc="Evaluating")):
+    # Adjust indices for parallel evaluation
+    start_offset = args.start_idx if args.start_idx is not None else 0
+    
+    for local_idx, sample in enumerate(tqdm(samples, desc=f"Worker {args.worker_id}" if args.start_idx is not None else "Evaluating")):
+        # Global index for this sample
+        idx = start_offset + local_idx
+        
         # Extract sample data
         question = sample.get("Question", "")
         expected_answer = sample.get("Final Answer", "N/A")
@@ -462,8 +488,12 @@ def main():
         "results": results
     }
     
-    # Save to JSON
-    results_path = os.path.join(output_path, "results.json")
+    # Save to JSON - use worker-specific filename if parallel
+    if args.start_idx is not None:
+        results_path = os.path.join(output_path, f"results_worker_{args.worker_id}.json")
+    else:
+        results_path = os.path.join(output_path, "results.json")
+    
     with open(results_path, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
     
