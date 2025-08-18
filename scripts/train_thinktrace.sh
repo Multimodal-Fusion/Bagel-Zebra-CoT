@@ -12,6 +12,8 @@ export MAIN_DIR="$HOME/project/vlm/Bagel-Zebra-CoT"
 # Select which trace type to use (passed as argument or default to visual-cot)
 TASK_NAME=${1:-"frozenlake"} # Options: frozenlake, maze, tetris
 TRACE_TYPE=${2:-"visual-cot"}  # Options: sft, textual-cot, visual-cot
+# EXAMPLE: ./train_thinktrace.sh frozenlake visual-cot
+
 # assert that TRACE_TYPE is one of the following
 ALLOWED_TRACE_TYPES=("sft" "textual-cot" "visual-cot")
 if ! [[ " ${ALLOWED_TRACE_TYPES[@]} " =~ " ${TRACE_TYPE} " ]]; then
