@@ -24,7 +24,7 @@ fi
 
 DATASET_CONFIG="$MAIN_DIR/data/configs/${TASK_NAME}/${TRACE_TYPE}.yaml"
 MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
-EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-v1"
+EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-v2"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
