@@ -109,29 +109,6 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
         # Remove patterns like "THOUGHT 1:", "THOUGHT 2:", etc.
         pattern = r'THOUGHT\s*\d+:\s*'
         return re.sub(pattern, '', text)
-    
-    def parse_modality_sequence(self, text):
-        """Parse text to get ordered sequence of modalities"""
-        segments = []
-        pattern = r'<image_start>\[([^\]]+)\]<image_end>'
-        last_pos = 0
-        
-        for match in re.finditer(pattern, text):
-            # Add text before image if exists
-            text_before = text[last_pos:match.start()]
-            if text_before.strip():
-                segments.append(('text', text_before.strip()))
-            
-            # Add image reference
-            segments.append(('image', match.group(1)))
-            last_pos = match.end()
-        
-        # Add remaining text if exists
-        remaining = text[last_pos:]
-        if remaining.strip():
-            segments.append(('text', remaining.strip()))
-        
-        return segments
 
     def load_image_safely(self, data_item, image_key):
         """Load image with null checking and path resolution"""
@@ -208,55 +185,68 @@ class ThinkTraceJSONLIterableDataset(InterleavedBaseIterableDataset, Distributed
             # Original behavior if no images in question
             data = self._add_text(data, question, need_loss=False, enable_cfg=True)
         
-        # 2. Parse reasoning trace to preserve original order
-        segments = self.parse_modality_sequence(reasoning_trace)
+        # 2. Interleave text parts and images from reasoning trace
+        image_refs = self.extract_image_references(reasoning_trace)
         
-        # 3. Load all images first (for validation)
-        image_refs = [ref for mod, ref in segments if mod == 'image']
-        loaded_images = {}
+        loaded_images = []
         for image_ref in image_refs:
             image = self.load_image_safely(data_item, image_ref)
-            if image is None:
+            if image is not None:
+                loaded_images.append(image)
+            else:
+                # If image fails to load, skip this sample
                 print(f"Skipping sample due to missing image: {image_ref}")
                 return {}
-            loaded_images[image_ref] = image
+
+        # Clean reasoning trace by removing image references for text processing
+        clean_reasoning_trace = self.replace_image_references(reasoning_trace)
         
-        # 4. Process segments in original order
-        for i, (modality, content) in enumerate(segments):
-            if modality == 'text':
-                # Remove THOUGHT patterns
-                clean_text = self.remove_thought_patterns(content)
+        # Remove THOUGHT patterns from the reasoning trace
+        clean_reasoning_trace = self.remove_thought_patterns(clean_reasoning_trace)
+        
+        # Append final answer to the reasoning trace
+        # clean_reasoning_trace += f"\n\nFinal Answer: {final_answer}"
+        
+        # Split reasoning trace by image placeholders to interleave text and images
+        text_parts = clean_reasoning_trace.split('<IMAGE_PLACEHOLDER>')
+        
+        if len(text_parts) != len(loaded_images) + 1:
+            print(f"Mismatch between text parts ({len(text_parts)}) and images ({len(loaded_images)})")
+            return {}
+
+        # 4. Interleave text parts and images from reasoning trace
+        for i, text_part in enumerate(text_parts):
+            # Add text part if not empty
+            if text_part.strip():
+                # Wrap reasoning text with <think></think> tokens
+                wrapped_text = f"<think>{text_part.strip()}</think>"
                 
-                # Check if this is the last text segment
-                is_last_text = (i == len(segments) - 1) or \
-                               all(m == 'image' for m, _ in segments[i+1:])
-                
-                if is_last_text:
-                    # Wrap with think tags and append final answer
-                    wrapped_text = f"<think>{clean_text}</think>\n{final_answer_formatted}"
-                    data = self._add_text(data, wrapped_text, need_loss=True, enable_cfg=True)
+                # Determine what the im_end token should predict
+                if i < len(loaded_images):
+                    # If this text part is followed by an image, predict vision_start
+                    next_token_label = self.start_of_image
+                elif i == len(text_parts) - 1:
+                    # If this is the last text part, predict im_start for final answer
+                    next_token_label = self.im_start
                 else:
-                    # Regular text segment with think tags
-                    wrapped_text = f"<think>{clean_text}</think>"
-                    # Check if next segment is image for special token
-                    next_is_image = (i+1 < len(segments) and segments[i+1][0] == 'image')
-                    next_token_label = self.start_of_image if next_is_image else self.im_start
-                    data = self._add_text(data, wrapped_text, need_loss=True, enable_cfg=True, 
-                                        next_token_label=next_token_label)
+                    next_token_label = None
+                    
+                data = self._add_text(data, wrapped_text, need_loss=True, enable_cfg=True, next_token_label=next_token_label)
             
-            elif modality == 'image':
-                # Add the image
+            # Add image if available
+            if i < len(loaded_images):
+                # Add image with both VAE and VIT processing for full capability
                 data = self._add_image(
                     data,
-                    loaded_images[content],
-                    need_loss=True,
-                    need_vae=True,
-                    need_vit=True,
+                    loaded_images[i], 
+                    need_loss=True,  # VAE generation loss
+                    need_vae=True,   # VAE conditioning
+                    need_vit=True,   # VIT understanding
                     enable_cfg=True,
                 )
-        
-        # 5. Final answer is now added to the last text segment above
-        # data = self._add_text(data, final_answer_formatted, need_loss=True, enable_cfg=True)
+
+        # 5. Add final answer
+        data = self._add_text(data, final_answer_formatted, need_loss=True, enable_cfg=True)
 
         return data
 
