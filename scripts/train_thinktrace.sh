@@ -51,8 +51,8 @@ LR_SCHEDULER="cosine"
 
 # training hyperparams
 WARMUP_STEPS=2000 # Linear warm-up steps before applying the main LR schedule.
-TOTAL_STEPS=20000
-SAVE_EVERY=1000
+TOTAL_STEPS=5000
+SAVE_EVERY=500
 MAX_CHECKPOINTS=25 # default is 3
 EXPECTED_NUM_TOKENS=10240
 MAX_NUM_TOKENS=11520

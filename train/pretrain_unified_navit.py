@@ -667,6 +667,11 @@ def main():
         scheduler.step()
         fsdp_ema_update(ema_model, fsdp_model, decay=training_args.ema)
 
+        # Check if we've reached total_steps and should stop training
+        if curr_step >= training_args.total_steps - 1:
+            logger.info(f"Reached total_steps ({training_args.total_steps}), stopping training")
+            break
+
         # Log loss values:
         if curr_step % training_args.log_every == 0:
             total_samples = torch.tensor(len(data['sample_lens']), device=device)

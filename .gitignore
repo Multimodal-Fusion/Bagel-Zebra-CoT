@@ -18,6 +18,9 @@ reasoning_output*
 jobs/*
 jobs/
 jobs*
+jobs-*/
+jobs-*/*
+helper_scripts/generate_job_scripts.sh
 
 # ignore all core*
 core*
