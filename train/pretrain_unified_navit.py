@@ -8,6 +8,7 @@ import wandb
 import yaml
 from copy import deepcopy
 from dataclasses import dataclass, field
+from typing import Optional
 from time import time
 
 import torch
@@ -149,6 +150,10 @@ class DataArguments:
     data_seed: int = field(
         default=42,
         metadata={"help": "Seed used when shuffling / sampling data shards to ensure reproducibility."}
+    )
+    override_num_samples: Optional[int] = field(
+        default=None,
+        metadata={"help": "Override num_used_data in all dataset configs. If set, this value will be used instead of the values in the YAML config."}
     )
 
 
@@ -551,6 +556,17 @@ def main():
     with open(data_args.dataset_config_file, "r") as stream:
         dataset_meta = yaml.safe_load(stream)
     print(dataset_meta)
+    
+    # Apply num_samples override if specified
+    if data_args.override_num_samples is not None:
+        logger.info(f"Overriding num_used_data to {data_args.override_num_samples} samples per dataset")
+        for group_name, group_config in dataset_meta.items():
+            # Replace num_used_data with the override value
+            if 'num_used_data' in group_config:
+                num_datasets = len(group_config.get('dataset_names', []))
+                group_config['num_used_data'] = [data_args.override_num_samples] * num_datasets
+                logger.info(f"  - {group_name}: overriding {num_datasets} dataset(s)")
+    
     dataset_config = DataConfig(grouped_datasets=dataset_meta)
     if training_args.visual_und:
         dataset_config.vit_patch_size = model_args.vit_patch_size

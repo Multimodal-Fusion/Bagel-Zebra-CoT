@@ -12,7 +12,9 @@ export MAIN_DIR="$HOME/project/vlm/Bagel-Zebra-CoT"
 # Select which trace type to use (passed as argument or default to visual-cot)
 TASK_NAME=${1:-"frozenlake"} # Options: frozenlake, maze, tetris
 TRACE_TYPE=${2:-"visual-cot"}  # Options: sft, textual-cot, visual-cot
+NUM_SAMPLES=${3:-""}  # Optional: Number of samples to use for training (empty = use YAML config)
 # EXAMPLE: ./train_thinktrace.sh frozenlake visual-cot
+# EXAMPLE: ./train_thinktrace.sh frozenlake visual-cot 10000
 
 # assert that TRACE_TYPE is one of the following
 ALLOWED_TRACE_TYPES=("sft" "textual-cot" "visual-cot")
@@ -28,6 +30,9 @@ EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-v2"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
+if [ -n "$NUM_SAMPLES" ]; then
+    echo "Number of samples override: $NUM_SAMPLES"
+fi
 echo "================================================"
 
 # modality params
@@ -95,6 +100,13 @@ echo "================================================"
 ########################################################
 # run the experiment
 ########################################################
+# Add override_num_samples argument if NUM_SAMPLES is specified
+if [ -n "$NUM_SAMPLES" ]; then
+    OVERRIDE_ARG="--override_num_samples $NUM_SAMPLES"
+else
+    OVERRIDE_ARG=""
+fi
+
 torchrun \
   --nnodes=$NUM_NODES \
   --node_rank=$NODE_RANK \
@@ -133,7 +145,8 @@ torchrun \
   --results_dir "results/$EXPERIMENT_NAME" \
   --save_every $SAVE_EVERY \
   --sync_checkpoints \
-  --no_save_optimizer_states 
+  --no_save_optimizer_states \
+  $OVERRIDE_ARG 
 
 #   --save_bf16 \
 # --text_cond_dropout_prob 0.1 \
