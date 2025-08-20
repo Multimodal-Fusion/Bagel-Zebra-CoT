@@ -50,7 +50,7 @@ export WANDB_PROJECT="grepa"
 export REPO_DIR="/home/colligo/project/vlm/Bagel-Zebra-CoT"
 export CONDA_ENV="bagel"
 export GIT_BRANCH="main"
-export GIT_COMMIT_HASH="latest"  # Will use latest from branch
+export GIT_COMMIT_HASH="ec07fb9ac80cb50e9c993fa0c540e06b73360714"
 
 # export relevant keys/tokens
 export HF_TOKEN=$HF_TOKEN
@@ -183,13 +183,13 @@ for task in "${TASKS[@]}"; do
             # Copy template and replace placeholders
             cp "$TEMPLATE_FILE" "$job_file"
             
-            # Replace all placeholders
+            # Replace all placeholders - ORDER MATTERS!
+            # First replace the _VALUE placeholders
             sed -i "s/TASK_NAME_VALUE/${task}/g" "$job_file"
             sed -i "s/TRACE_TYPE_VALUE/${trace}/g" "$job_file"
             sed -i "s/NUM_SAMPLES_VALUE/${samples}/g" "$job_file"
-            sed -i "s/TASK_NAME/${task}/g" "$job_file"
-            sed -i "s/TRACE_TYPE/${trace}/g" "$job_file"
-            sed -i "s/NUM_SAMPLES/${samples}/g" "$job_file"
+            # Then replace in the job name (be more specific to avoid replacing the values we just set)
+            sed -i "s/#ABATCH --name bagel_TASK_NAME_TRACE_TYPE_NUM_SAMPLESsamples/#ABATCH --name bagel_${task}_${trace}_${samples}samples/g" "$job_file"
             sed -i "s/ACCELERATOR_TYPE/${ACCELERATOR}/g" "$job_file"
             sed -i "s/PROJECT_NAME/${PROJECT}/g" "$job_file"
             sed -i "s/SNAPSHOT_ID_VALUE/${SNAPSHOT_ID}/g" "$job_file"

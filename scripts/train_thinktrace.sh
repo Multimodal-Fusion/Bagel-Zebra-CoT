@@ -26,7 +26,7 @@ fi
 
 DATASET_CONFIG="$MAIN_DIR/data/configs/${TASK_NAME}/${TRACE_TYPE}.yaml"
 MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
-EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-v2"
+EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-numsamples${NUM_SAMPLES}-totalsteps${TOTAL_STEPS}-v1"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
@@ -59,6 +59,7 @@ MAX_NUM_TOKENS=11520
 MAX_NUM_TOKENS_PER_SAMPLE=10240
 PREFER_BUFFER_BEFORE=10240
 NUM_WORKER=16
+DO_EVAL=true
 
 # logging hyperparams
 LOG_EVERY=10
@@ -157,3 +158,44 @@ echo "🎉 Training completed!"
 echo "Check results in: results/$EXPERIMENT_NAME/"
 echo "Checkpoints saved in: results/$EXPERIMENT_NAME/checkpoints/"
 echo "=========================================="
+
+if [ "$DO_EVAL" = true ]; then
+    echo "=========================================="
+    echo "🎉 Running evaluation!"
+    echo "=========================================="
+    # first convert the checkpoints to the correct format (0005000 or basically the last one with 7 digits)
+    LAST_CHECKPOINT=$(ls -d results/$EXPERIMENT_NAME/checkpoints/* | sort -V | tail -n 1)
+    echo "Last checkpoint: $LAST_CHECKPOINT"
+    # convert the checkpoint to the correct format
+    python scripts/convert_checkpoints.py $LAST_CHECKPOINT
+
+    # converted checkpoint is same checkpoint but with _hf at the end
+    CONVERTED_CHECKPOINT="${LAST_CHECKPOINT}_hf"
+    EVAL_NAME="eval-${EXPERIMENT_NAME}"
+
+    # choose flag based on TRACE_TYPE
+    if [ "$TRACE_TYPE" = "visual-cot" ]; then
+        VISUAL_FLAG="--visual-cot"
+    else
+        VISUAL_FLAG="--no-visual-cot"
+    fi
+
+    # run the evaluation
+    ./helper_scripts/run_parallel_eval.sh \
+        --num-workers 8 \
+        --checkpoint-dir "$CONVERTED_CHECKPOINT" \
+        --dataset-path "./visual_data/data/$TASK_NAME/test/${TASK_NAME}_thinktrace.jsonl" \
+        --data-dir ./visual_data \
+        --eval-name "$EVAL_NAME" \
+        --image-dim 256 \
+        $VISUAL_FLAG \
+        --max-inference-steps 1 \
+        --max-samples 500
+
+    # sync the outputs folder
+    sd sync outputs/$EVAL_NAME
+    echo "=========================================="
+    echo "🎉 Evaluation completed!"
+    echo "Check results in: outputs/$EVAL_NAME/"
+    echo "=========================================="
+fi
