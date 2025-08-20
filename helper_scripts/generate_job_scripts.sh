@@ -39,6 +39,7 @@ cat > "$TEMPLATE_FILE" << 'EOF'
 #ABATCH --init-script /home/colligo/init.sh
 #ABATCH --start
 #ABATCH --job-type training
+PREEMPTIBLE_PLACEHOLDER
 
 set -exv
 
@@ -50,7 +51,7 @@ export WANDB_PROJECT="grepa"
 export REPO_DIR="/home/colligo/project/vlm/Bagel-Zebra-CoT"
 export CONDA_ENV="bagel"
 export GIT_BRANCH="main"
-export GIT_COMMIT_HASH="ec07fb9ac80cb50e9c993fa0c540e06b73360714"
+export GIT_COMMIT_HASH="e076913ff03b6eed09dd9a766cd303886d47f637"
 
 # export relevant keys/tokens
 export HF_TOKEN=$HF_TOKEN
@@ -193,6 +194,13 @@ for task in "${TASKS[@]}"; do
             sed -i "s/ACCELERATOR_TYPE/${ACCELERATOR}/g" "$job_file"
             sed -i "s/PROJECT_NAME/${PROJECT}/g" "$job_file"
             sed -i "s/SNAPSHOT_ID_VALUE/${SNAPSHOT_ID}/g" "$job_file"
+            
+            # Add preemptible flag for samples > 1000
+            if [ "$samples" -gt 1000 ]; then
+                sed -i "s/PREEMPTIBLE_PLACEHOLDER/#ABATCH --preemptible/g" "$job_file"
+            else
+                sed -i "s/PREEMPTIBLE_PLACEHOLDER//g" "$job_file"
+            fi
             
             # Make executable
             chmod +x "$job_file"

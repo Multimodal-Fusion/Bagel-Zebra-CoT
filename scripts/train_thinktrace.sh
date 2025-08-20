@@ -26,7 +26,6 @@ fi
 
 DATASET_CONFIG="$MAIN_DIR/data/configs/${TASK_NAME}/${TRACE_TYPE}.yaml"
 MODEL_PATH="$MAIN_DIR/models/BAGEL-7B-MoT"
-EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-numsamples${NUM_SAMPLES}-totalsteps${TOTAL_STEPS}-v1"
 
 echo "================================================"
 echo "Training with trace type: $TRACE_TYPE"
@@ -80,6 +79,9 @@ export WANDB_ENTITY="genai-x"
 
 # add main directory to python path
 export PYTHONPATH="$MAIN_DIR:$PYTHONPATH"
+
+# set the experiment name
+EXPERIMENT_NAME="bagel-${TASK_NAME}-256dim-${TRACE_TYPE}-numsamples${NUM_SAMPLES}-totalsteps${TOTAL_STEPS}-v1"
 
 ########################################################
 # print the variables
